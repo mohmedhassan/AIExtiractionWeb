@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة التحليل المالي – Trusted IT.ai</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-background-primary: #f7f7f7;
+      --color-background-secondary: #f0efeb;
+      --color-background-tertiary: #FFF;
+      --color-background-info: #e6f1fb;
+      --color-background-success: #e1f5ee;
+      --color-background-warning: #faeeda;
+      --color-background-danger: #fcebeb;
+      --color-text-primary: #1a1a18;
+      --color-text-secondary: #5f5e5a;
+      --color-text-tertiary: #888780;
+      --color-text-info: #185fa5;
+      --color-text-success: #0f6e56;
+      --color-text-warning: #854f0b;
+      --color-text-danger: #a32d2d;
+      --color-border-tertiary: rgba(26,26,24,0.1);
+      --color-border-secondary: rgba(26,26,24,0.18);
+      --color-border-primary: rgba(26,26,24,0.32);
+      --accent: #1D9E75;
+      --accent-dark: #0f6e56;
+      --accent-light: #e1f5ee;
+      --sidebar-w: 240px;
+      --nav-h: 60px;
+      --font-sans: 'Cairo', sans-serif;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 18px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--color-text-primary);
+      min-height: 100vh;
+      direction: rtl;
+      overflow-x: hidden;
+      background: var(--color-background-primary);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    body.ready { opacity: 1; }
+
+    /* ══════════════════════════════════════
+       PDF / LOADING OVERLAY
+    ══════════════════════════════════════ */
+    .pdf-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 25, 20, 0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .pdf-overlay.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .pdf-modal {
+      background: var(--color-background-tertiary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08);
+      padding: 2.5rem 2.8rem;
+      text-align: center;
+      min-width: 300px;
+      max-width: 380px;
+      transform: translateY(12px) scale(0.97);
+      transition: transform 0.35s cubic-bezier(.22,.61,.36,1);
+    }
+    .pdf-overlay.visible .pdf-modal {
+      transform: translateY(0) scale(1);
+    }
+
+    /* Spinner */
+    .pdf-spinner {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 1.4rem;
+      position: relative;
+    }
+    .pdf-spinner::before,
+    .pdf-spinner::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+    }
+    /* outer ring */
+    .pdf-spinner::before {
+      inset: 0;
+      border: 3px solid var(--accent-light);
+      border-top-color: var(--accent);
+      animation: spin 0.85s linear infinite;
+    }
+    /* inner dot */
+    .pdf-spinner::after {
+      inset: 12px;
+      background: var(--accent-light);
+      animation: pulse 0.85s ease-in-out infinite alternate;
+    }
+    @keyframes spin  { to { transform: rotate(360deg); } }
+    @keyframes pulse { from { transform: scale(0.7); opacity: 0.5; } to { transform: scale(1); opacity: 1; } }
+
+    .pdf-modal-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--color-text-primary);
+      margin-bottom: 8px;
+    }
+    .pdf-modal-sub {
+      font-size: 13px;
+      color: var(--color-text-tertiary);
+      line-height: 1.6;
+      min-height: 40px;
+      transition: opacity 0.3s;
+    }
+
+    /* subtle progress bar under modal */
+    .pdf-progress {
+      margin-top: 1.4rem;
+      height: 3px;
+      border-radius: 99px;
+      background: var(--color-background-secondary);
+      overflow: hidden;
+    }
+    .pdf-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), #378ADD);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; top: 0; right: 0; left: 0;
+      height: var(--nav-h);
+      background: var(--color-background-tertiary);
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      display: flex; align-items: center;
+      padding: 0 1.25rem; gap: 0;
+      z-index: 200;
+    }
+    .nav-sidebar-toggle {
+      width: 36px; height: 36px;
+      border: none; background: none; cursor: pointer;
+      border-radius: var(--radius-sm);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4.5px;
+      transition: background 0.15s; flex-shrink: 0;
+    }
+    .nav-sidebar-toggle:hover { background: var(--color-background-primary); }
+    .nav-sidebar-toggle span {
+      display: block; width: 18px; height: 1.5px;
+      background: var(--color-text-secondary); border-radius: 2px;
+      transition: transform 0.25s, opacity 0.25s, width 0.25s;
+    }
+    .sidebar-open .nav-sidebar-toggle span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .sidebar-open .nav-sidebar-toggle span:nth-child(2) { opacity: 0; width: 0; }
+    .sidebar-open .nav-sidebar-toggle span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+    .nav-brand { font-size: 18px; font-weight: 900; color: var(--color-text-primary); letter-spacing: -0.5px; margin-right: 12px; flex-shrink: 0; }
+    .nav-brand span { color: var(--accent); }
+    .nav-divider { width: 0.5px; height: 22px; background: var(--color-border-secondary); margin: 0 14px; flex-shrink: 0; }
+    .nav-breadcrumb { font-size: 12.5px; color: var(--color-text-tertiary); display: flex; align-items: center; gap: 6px; }
+    .nav-breadcrumb .crumb-active { color: var(--color-text-secondary); font-weight: 600; }
+    .nav-spacer { flex: 1; }
+
+    .nav-search {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: 99px; padding: 0 14px; height: 34px; min-width: 180px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .nav-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,158,117,0.1); }
+    .nav-search svg { color: var(--color-text-tertiary); flex-shrink: 0; }
+    .nav-search input { border: none; background: none; outline: none; font-family: var(--font-sans); font-size: 12.5px; color: var(--color-text-primary); width: 100%; direction: rtl; }
+    .nav-search input::placeholder { color: var(--color-text-tertiary); }
+
+    .nav-icons { display: flex; align-items: center; gap: 2px; margin-right: 8px; }
+    .nav-icon-btn {
+      position: relative; width: 36px; height: 36px;
+      border: none; background: none; border-radius: var(--radius-sm); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--color-text-secondary); transition: background 0.15s, color 0.15s;
+    }
+    .nav-icon-btn:hover { background: var(--color-background-primary); color: var(--color-text-primary); }
+    .nav-icon-btn .badge-count {
+      position: absolute; top: 4px; left: 4px;
+      min-width: 16px; height: 16px; padding: 0 4px;
+      background: #E24B4A; border-radius: 99px;
+      border: 1.5px solid var(--color-background-tertiary);
+      font-size: 9px; font-weight: 800; color: #fff;
+      display: flex; align-items: center; justify-content: center; font-family: var(--font-sans);
+    }
+
+    .nav-lang { display: flex; align-items: center; background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary); border-radius: 99px; padding: 3px; margin: 0 6px; }
+    .lang-btn { font-size: 11px; font-weight: 700; padding: 3px 10px; border: none; background: none; cursor: pointer; border-radius: 99px; color: var(--color-text-tertiary); transition: background 0.2s, color 0.2s; font-family: var(--font-sans); }
+    .lang-btn.active { background: var(--color-background-tertiary); color: var(--color-text-primary); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+    .nav-user { display: flex; align-items: center; gap: 9px; padding: 4px 10px 4px 4px; border-radius: 99px; cursor: pointer; transition: background 0.15s; border: 0.5px solid transparent; margin-right: 4px; }
+    .nav-user:hover { background: var(--color-background-primary); border-color: var(--color-border-tertiary); }
+
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #1D9E75, #378ADD);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; position: relative;
+    }
+    .avatar::after { content: ''; position: absolute; bottom: 0; left: 0; width: 9px; height: 9px; border-radius: 50%; background: #22c55e; border: 1.5px solid var(--color-background-tertiary); }
+
+    .nav-user-info { display: flex; flex-direction: column; }
+    .nav-user-name { font-size: 12.5px; font-weight: 700; color: var(--color-text-primary); line-height: 1.2; }
+    .nav-user-role { font-size: 10.5px; color: var(--color-text-tertiary); }
+
+    .logout-btn { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border: none; background: none; cursor: pointer; font-family: var(--font-sans); font-size: 12px; color: var(--color-text-danger); border-radius: var(--radius-sm); transition: background 0.15s; font-weight: 600; }
+    .logout-btn:hover { background: var(--color-background-danger); }
+
+    /* ── NOTIF PANEL ── */
+    .notif-panel {
+      position: fixed; top: calc(var(--nav-h) + 8px); left: 16px; width: 320px;
+      background: var(--color-background-tertiary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1); z-index: 300; overflow: hidden;
+      transform: translateY(-8px) scale(0.97); opacity: 0; pointer-events: none;
+      transition: transform 0.2s cubic-bezier(.22,.61,.36,1), opacity 0.2s;
+    }
+    .notif-panel.open { transform: translateY(0) scale(1); opacity: 1; pointer-events: all; }
+    .notif-header { padding: 14px 16px 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 0.5px solid var(--color-border-tertiary); }
+    .notif-title { font-size: 13px; font-weight: 800; }
+    .notif-mark { font-size: 11px; color: var(--accent); cursor: pointer; font-weight: 600; }
+    .notif-item { display: flex; gap: 10px; align-items: flex-start; padding: 12px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); transition: background 0.15s; cursor: pointer; }
+    .notif-item:hover { background: var(--color-background-primary); }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .notif-content { flex: 1; }
+    .notif-text { font-size: 12.5px; color: var(--color-text-primary); line-height: 1.5; }
+    .notif-time { font-size: 10.5px; color: var(--color-text-tertiary); margin-top: 2px; }
+
+    /* ── SIDEBAR ── */
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.18); z-index: 150; backdrop-filter: blur(2px); }
+    .sidebar-open .sidebar-overlay { display: block; }
+
+    .sidebar {
+      position: fixed; top: var(--nav-h); right: 0;
+      width: var(--sidebar-w); height: calc(100vh - var(--nav-h));
+      background: var(--color-background-tertiary);
+      border-left: 0.5px solid var(--color-border-tertiary);
+      display: flex; flex-direction: column;
+      z-index: 160; transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(.22,.61,.36,1); overflow: hidden;
+    }
+    .sidebar-open .sidebar { transform: translateX(0); }
+
+    .sidebar-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: var(--color-text-tertiary); text-transform: uppercase; padding: 18px 18px 6px; }
+    .sidebar-nav { padding: 8px 10px; flex: 1; overflow-y: auto; }
+    .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--radius-md); cursor: pointer; transition: background 0.15s; color: var(--color-text-secondary); font-size: 13.5px; font-weight: 600; border: none; background: none; width: 100%; text-align: right; font-family: var(--font-sans); }
+    .sidebar-item:hover { background: var(--color-background-primary); color: var(--color-text-primary); }
+    .sidebar-item.active { background: var(--accent-light); color: var(--accent-dark); }
+    .sidebar-item.active .si-icon { background: rgba(29,158,117,0.15); color: var(--accent); }
+    .si-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--color-background-primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sidebar-item:hover .si-icon { background: var(--color-background-secondary); }
+    .si-badge { margin-right: auto; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px; background: var(--color-background-warning); color: var(--color-text-warning); }
+    .si-badge.green { background: var(--accent-light); color: var(--accent-dark); }
+    .si-badge.red { background: var(--color-background-danger); color: var(--color-text-danger); }
+    .sidebar-divider { height: 0.5px; background: var(--color-border-tertiary); margin: 8px 18px; }
+    .sidebar-footer { padding: 12px 10px; border-top: 0.5px solid var(--color-border-tertiary); }
+    .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-md); cursor: pointer; transition: background 0.15s; }
+    .sidebar-user:hover { background: var(--color-background-primary); }
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-user-email { font-size: 11px; color: var(--color-text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── MAIN ── */
+    .main-wrapper { margin-top: var(--nav-h); }
+    .container { max-width: 1060px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 2rem; }
+    .page-title { font-size: 24px; font-weight: 800; }
+    .page-sub { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
+    .badge-year { display: inline-block; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 99px; background: var(--color-background-success); color: var(--color-text-success); }
+
+    .upload-zone { border: 1.5px dashed var(--color-border-secondary); border-radius: var(--radius-lg); padding: 2rem; text-align: center; cursor: pointer; background: var(--color-background-tertiary); transition: background 0.2s, border-color 0.2s; margin-bottom: 1rem; }
+    .upload-zone:hover { background: var(--color-background-primary); border-color: var(--color-border-primary); }
+    .upload-zone.dragover { background: var(--color-background-info); border-color: #185fa5; }
+    .upload-icon { font-size: 28px; margin-bottom: 8px; }
+    .upload-label { font-size: 15px; color: var(--color-text-secondary); }
+    .upload-label strong { color: var(--color-text-info); }
+    .upload-hint { font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px; }
+
+    .btn-analyze { width: 100%; padding: 14px; font-family: var(--font-sans); font-size: 16px; font-weight: 700; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; margin-bottom: 2rem; transition: background 0.2s, transform 0.1s; }
+    .btn-analyze:hover { background: var(--accent-dark); }
+    .btn-analyze:active { transform: scale(0.99); }
+    .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .section-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--color-text-tertiary); text-transform: uppercase; margin: 2rem 0 0.9rem; }
+
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 10px; }
+    .metric-card { background: var(--color-background-tertiary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--radius-lg); padding: 14px 16px; border-right: 3px solid transparent; transition: box-shadow 0.2s; }
+    .metric-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .metric-card.green { border-right-color: #1D9E75; }
+    .metric-card.blue  { border-right-color: #378ADD; }
+    .metric-card.amber { border-right-color: #EF9F27; }
+    .metric-card.red   { border-right-color: #E24B4A; }
+    .metric-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; }
+    .metric-value { font-size: 23px; font-weight: 700; color: var(--color-text-primary); letter-spacing: -0.5px; }
+    .metric-sub { font-size: 11px; color: var(--color-text-tertiary); margin-top: 4px; }
+
+    .divider { height: 0.5px; background: var(--color-border-tertiary); margin: 2rem 0; }
+
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .charts-row.full { grid-template-columns: 1fr; }
+    .chart-card { background: var(--color-background-tertiary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--radius-lg); padding: 1.25rem; }
+    .chart-card-label { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 12px; }
+
+    .wf-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+    .wf-label { width: 90px; font-size: 11px; color: var(--color-text-secondary); text-align: right; flex-shrink: 0; }
+    .wf-bar { height: 26px; border-radius: 4px; display: flex; align-items: center; padding: 0 10px; font-weight: 700; font-size: 11px; color: #fff; min-width: 40px; font-family: var(--font-sans); }
+
+    .ratios-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .ratio-card { background: var(--color-background-tertiary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--radius-lg); padding: 1.25rem; text-align: center; }
+    .ratio-circle { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; border: 3px solid transparent; }
+    .ratio-name { font-size: 12px; color: var(--color-text-secondary); }
+
+    .btn-excel { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 13px; font-family: var(--font-sans); font-size: 15px; font-weight: 700; background: var(--color-background-tertiary); color: var(--color-text-success); border: 1.5px solid var(--accent); border-radius: var(--radius-md); cursor: pointer; transition: background 0.2s; margin-top: 1rem; }
+    .btn-excel:hover { background: var(--color-background-success); }
+
+    .file-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary); background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: 99px; padding: 4px 12px; margin-bottom: 1rem; }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--color-text-secondary); }
+    .legend-sq { width: 10px; height: 10px; border-radius: 2px; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 640px) {
+      .charts-row { grid-template-columns: 1fr; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .nav-search { display: none; }
+      .nav-breadcrumb { display: none; }
+      .nav-divider { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+       LOADING OVERLAY
+  ══════════════════════════════════════ -->
+  <div class="pdf-overlay" id="pdfOverlay">
+    <div class="pdf-modal">
+      <div class="pdf-spinner"></div>
+      <div class="pdf-modal-title">جاري إنشاء تقرير القرار</div>
+      <div class="pdf-modal-sub" id="pdfModalSub">يتم تجميع بيانات الملف الائتماني...</div>
+      <div class="pdf-progress">
+        <div class="pdf-progress-bar" id="pdfProgressBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <button class="nav-sidebar-toggle" onclick="toggleSidebar()">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-brand" style="margin-right:14px;">Trusted IT<span>.</span>ai</div>
+    <div class="nav-divider"></div>
+    <div class="nav-breadcrumb">
+      <span>الرئيسية</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      <span class="crumb-active">لوحة التحليل</span>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-search">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="ابحث عن شركة أو تقرير..." />
+    </div>
+    <div class="nav-lang" style="margin-right:8px;">
+      <button class="lang-btn active">AR</button>
+      <button class="lang-btn">EN</button>
+    </div>
+    <div class="nav-icons">
+      <button class="nav-icon-btn" title="الإعدادات">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>
+      </button>
+      <button class="nav-icon-btn" title="الإشعارات" onclick="toggleNotif(event)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="badge-count">3</span>
+      </button>
+      <button class="nav-icon-btn" title="المساعدة">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </button>
+    </div>
+    <div class="nav-user" style="margin-right:4px;">
+      <div class="avatar" id="navAvatar">AD</div>
+      <div class="nav-user-info">
+        <div class="nav-user-name" id="navUserName">Admin</div>
+        <div class="nav-user-role">محلل مالي</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="handleLogout()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      خروج
+    </button>
+  </nav>
+
+  <!-- NOTIF PANEL -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-header">
+      <span class="notif-title">الإشعارات</span>
+      <span class="notif-mark" onclick="markAllRead()">تحديد الكل كمقروء</span>
+    </div>
+    <div class="notif-item">
+      <span class="notif-dot" style="background:#1D9E75"></span>
+      <div class="notif-content"><div class="notif-text">تم رفع تقرير شركة الجزيرة بنجاح</div><div class="notif-time">منذ 5 دقائق</div></div>
+    </div>
+    <div class="notif-item">
+      <span class="notif-dot" style="background:#EF9F27"></span>
+      <div class="notif-content"><div class="notif-text">تنبيه: نسبة الرافعة المالية تجاوزت الحد في شركتين</div><div class="notif-time">منذ 42 دقيقة</div></div>
+    </div>
+    <div class="notif-item">
+      <span class="notif-dot" style="background:#378ADD"></span>
+      <div class="notif-content"><div class="notif-text">تقرير المقارنة الربعية متاح للتنزيل</div><div class="notif-time">منذ 3 ساعات</div></div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR OVERLAY -->
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-nav">
+      <div class="sidebar-section-label">الرئيسية</div>
+      <button class="sidebar-item active" onclick="navigate(this)">
+        <span class="si-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
+           لوحة الضمان  
+      </button>
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+        مؤشرات الأداء
+        <span class="si-badge green">جديد</span>
+      </button>
+      <div class="sidebar-section-label">التقارير</div>
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        رفع البيانات المالية
+      </button>
+      <a href="cgc-queries.html" style="text-decoration: none;">
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
+       طلبات الضمان
+        <span class="si-badge">3</span>
+      </button>
+      </a>
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+        التحليل الزمني
+      </button>
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
+        التقارير المجدولة
+        <span class="si-badge red">2</span>
+      </button>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label">الأدوات</div>
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+        المحلل الذكي AI
+        <span class="si-badge green">beta</span>
+      </button>
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
+        إنشاء تقرير مخصص
+      </button>
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg></span>
+        إدارة مصادر البيانات
+      </button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar" style="width:34px;height:34px;font-size:11px;" id="sidebarAvatar">أح</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name" id="sidebarUserName">Admin</div>
+          <div class="sidebar-user-email" id="sidebarUserEmail">admin@mali-ai.com</div>
+        </div>
+        <button style="border:none;background:none;cursor:pointer;padding:4px;border-radius:6px;color:var(--color-text-tertiary);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-wrapper">
+    <div class="container">
+      <div class="page-header">
+        <div>
+          <div class="page-title">التحليل المالي</div>
+          <div class="page-sub" id="headerSub">ارفع ملف البيانات أو استخدم البيانات التجريبية</div>
+        </div>
+        <span class="badge-year" id="yearBadge">2022</span>
+      </div>
+
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" multiple accept=".json,.pdf,.xlsx,.csv" style="display:none" onchange="handleFiles(this.files)" />
+        <div class="upload-icon">📂</div>
+        <div class="upload-label">اسحب ملفاتك هنا أو <strong>اضغط للاختيار</strong></div>
+        <div class="upload-hint">يدعم JSON – أو استخدم بيانات شركة الجزيرة التجريبية مباشرة</div>
+      </div>
+
+      <div class="file-tag hidden" id="fileTag">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span id="fileTagName">–</span>
+      </div>
+
+      <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">تحليل البيانات ←</button>
+
+      <div id="dashboard" class="hidden">
+        <div class="section-heading">المؤشرات المالية الرئيسية</div>
+        <div class="metrics-grid" id="metricsGrid"></div>
+        <div class="divider"></div>
+        <div class="section-heading">هيكل الإيرادات والأرباح</div>
+        <div class="charts-row">
+          <div class="chart-card">
+            <div class="chart-card-label">شلال الربحية</div>
+            <div id="waterfallChart"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-label">هيكل الميزانية</div>
+            <div class="legend">
+              <span class="legend-item"><span class="legend-sq" style="background:#1D9E75"></span>حقوق الملكية</span>
+              <span class="legend-item"><span class="legend-sq" style="background:#E24B4A"></span>المطلوبات</span>
+            </div>
+            <div style="position:relative;height:220px;"><canvas id="balanceChart"></canvas></div>
+          </div>
+        </div>
+        <div class="charts-row full">
+          <div class="chart-card">
+            <div class="chart-card-label">مقارنة الأرقام المالية الرئيسية (مليون)</div>
+            <div style="position:relative;height:220px;"><canvas id="barChart"></canvas></div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="section-heading">النسب المالية</div>
+        <div class="ratios-grid" id="ratiosGrid"></div>
+        <div class="divider"></div>
+        <button class="btn-excel" onclick="downloadExcel()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          تحميل Excel – التقرير الكامل
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+  <script>
+    /* ── AUTH GUARD ── */
+    const userData = sessionStorage.getItem('currentUser');
+    if (!userData) {
+      window.location.href = 'login.html';
+    } else {
+      const user = JSON.parse(userData);
+      document.getElementById('navAvatar').textContent       = user.initials;
+      document.getElementById('navUserName').textContent     = user.name;
+      document.getElementById('sidebarAvatar').textContent   = user.initials;
+      document.getElementById('sidebarUserName').textContent = user.name;
+      document.getElementById('sidebarUserEmail').textContent = user.email;
+      requestAnimationFrame(() => document.body.classList.add('ready'));
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem('currentUser');
+      document.body.style.opacity = '0';
+      document.body.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => { window.location.href = 'login.html'; }, 300);
+    }
+
+    /* ── SIDEBAR / NOTIF ── */
+    function toggleSidebar() { document.body.classList.toggle('sidebar-open'); }
+    function closeSidebar()  { document.body.classList.remove('sidebar-open'); }
+    function navigate(el) {
+      document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+      el.classList.add('active');
+      closeSidebar();
+    }
+    function toggleNotif(e) {
+      e.stopPropagation();
+      document.getElementById('notifPanel').classList.toggle('open');
+    }
+    function markAllRead() {
+      document.querySelectorAll('.notif-dot').forEach(d => d.style.background = '#ccc');
+      const badge = document.querySelector('.badge-count');
+      if (badge) badge.remove();
+    }
+    document.addEventListener('click', () => document.getElementById('notifPanel').classList.remove('open'));
+    document.getElementById('notifPanel').addEventListener('click', e => e.stopPropagation());
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    /* ══════════════════════════════════════
+       LOADING OVERLAY LOGIC
+    ══════════════════════════════════════ */
+    const loadingSteps = [
+      'يتم تجميع بيانات الملف الائتماني...',
+      'جاري تحليل القوائم المالية...',
+      'حساب النسب والمؤشرات...',
+      'إعداد تقرير القرار النهائي...',
+    ];
+
+    let loadingInterval = null;
+    let progressInterval = null;
+
+    function showLoading() {
+      const overlay   = document.getElementById('pdfOverlay');
+      const subText   = document.getElementById('pdfModalSub');
+      const progBar   = document.getElementById('pdfProgressBar');
+
+      // Reset
+      subText.textContent  = loadingSteps[0];
+      progBar.style.width  = '0%';
+      overlay.classList.add('visible');
+
+      let step = 0;
+      let progress = 0;
+
+      // Rotate messages every 1.8s
+      loadingInterval = setInterval(() => {
+        step = (step + 1) % loadingSteps.length;
+        subText.style.opacity = '0';
+        setTimeout(() => {
+          subText.textContent = loadingSteps[step];
+          subText.style.opacity = '1';
+        }, 200);
+      }, 1800);
+
+      // Animate progress bar up to ~85% (the last 15% fills on success)
+      progressInterval = setInterval(() => {
+        if (progress < 85) {
+          progress += Math.random() * 4;
+          progBar.style.width = Math.min(progress, 85) + '%';
+        }
+      }, 300);
+    }
+
+    function hideLoading(success = true) {
+      const overlay = document.getElementById('pdfOverlay');
+      const subText = document.getElementById('pdfModalSub');
+      const progBar = document.getElementById('pdfProgressBar');
+
+      clearInterval(loadingInterval);
+      clearInterval(progressInterval);
+
+      if (success) {
+        // Fill bar to 100% then fade out
+        progBar.style.width = '100%';
+        subText.style.opacity = '0';
+        setTimeout(() => {
+          subText.textContent = 'تم التحليل بنجاح ✓';
+          subText.style.opacity = '1';
+        }, 200);
+        setTimeout(() => {
+          overlay.classList.remove('visible');
+        }, 700);
+      } else {
+        overlay.classList.remove('visible');
+      }
+    }
+
+    /* ── DASHBOARD ── */
+    const defaultData = {
+      company_name: "شركة الجزيرة للاستيراد والتصدير",
+      financial_year: "2022-12-31",
+      commercial_register: "24040",
+      sales: 192079384, gross_profit: 43467565, net_profit: 30831689,
+      total_assets: 218777149, total_liabilities: 82010333, total_equity: 136766816,
+      current_assets: 212816553, current_liabilities: 82010333,
+      cash_flow_from_operations: 605000,
+      roe: "85.4%", roa: "66.3%", Leverage: "17.9%"
+    };
+    let currentData = { ...defaultData };
+    let balanceChartInst = null, barChartInst = null;
+
+    const zone = document.getElementById('uploadZone');
+    zone.addEventListener('click', () => document.getElementById('fileInput').click());
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+
+    let selectedFiles = null;
+
+    function handleFiles(files) {
+      if (!files.length) return;
+      selectedFiles = files;
+
+      for (let index = 0; index < files.length; index++) {
+      
+        document.getElementById('fileTagName').textContent += " --- " + files[index].name;
+      }
+      document.getElementById('fileTag').classList.remove('hidden');
+      document.getElementById('analyzeBtn').textContent = "تحليل ←";
+    }
+
+    function fmt(n) {
+      if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
+      if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+      if (n >= 1e3) return (n/1e3).toFixed(0) + 'K';
+      return Math.round(n).toLocaleString();
+    }
+
+    async function analyze() {
+      if (!selectedFiles) {
+        alert("❗ اختار ملف الأول");
+        return;
+      }
+
+      const formData = new FormData();
+      for (let i = 0; i < selectedFiles.length; i++) {
+        formData.append("files", selectedFiles[i]);
+      }
+
+      const btn = document.getElementById('analyzeBtn');
+      btn.disabled = true;
+
+      // ── Show loading overlay ──
+      showLoading();
+
+      try {
+        const res = await fetch("https://trustedai-hm49jq9v.b4a.run/analyze", { method: "POST", body: formData });
+        const data = await res.json();
+        currentData = data;
+
+        // ── Hide overlay (success) then render ──
+        hideLoading(true);
+
+        setTimeout(() => {
+          document.getElementById('dashboard').classList.remove('hidden');
+          renderWaterfall(data);
+          renderBalance(data);
+          renderBar(data);
+          renderRatios(data);
+        }, 800); // small delay so "تم التحليل بنجاح" is readable
+
+      } catch (err) {
+        console.error(err);
+        hideLoading(false);
+        alert("❌ حصل خطأ في الاتصال بالـ API");
+      }
+
+      btn.disabled = false;
+      btn.textContent = "إعادة التحليل ←";
+    }
+
+    function getVal(v, index = 0) {
+      if (Array.isArray(v)) return Number(v[index]) || 0;
+      return Number(v) || 0;
+    }
+
+    function getTextVal(v, index = 0) {
+      if (Array.isArray(v)) return v[index] ?? "";
+      return v ?? "";
+    }
+
+    function getYears(d) {
+      if (Array.isArray(d.years) && d.years.length) return d.years;
+      if (Array.isArray(d.income_statement?.year) && d.income_statement.year.length) return d.income_statement.year;
+      return ["2023", "2022", "2021"];
+    }
+
+    function renderWaterfall(d) {
+      const years = getYears(d);
+      const sales      = getVal(d.income_statement?.total_sales_revenues ?? d.sales, 0);
+      const grossProfit= getVal(d.income_statement?.gross_profit_is ?? d.gross_profit, 0);
+      const netProfit  = getVal(d.income_statement?.net_profit_loss_is ?? d.net_profit, 0);
+      const cogs = getVal(d.income_statement?.cogs, 0) || (sales - grossProfit);
+      const opex = getVal(d.income_statement?.total_expenses, 0) || (grossProfit - netProfit);
+      const maxV = sales || 1;
+      const items = [
+        { label: `المبيعات ${years[0]}`, v: sales,      color: '#378ADD' },
+        { label: 'تكلفة البضاعة',        v: cogs,       color: '#E24B4A' },
+        { label: 'مجمل الربح',           v: grossProfit,color: '#1D9E75' },
+        { label: 'مصاريف تشغيل',         v: opex,       color: '#EF9F27' },
+        { label: 'صافي الربح',           v: netProfit,  color: '#3C3489' },
+      ];
+      document.getElementById('waterfallChart').innerHTML = items.map(item => {
+        const pct = Math.max((item.v / maxV) * 100, 10).toFixed(1);
+        return `<div class="wf-row"><div class="wf-label">${item.label}</div><div class="wf-bar" style="width:${pct}%;background:${item.color};">${fmt(item.v)}</div></div>`;
+      }).join('');
+    }
+
+    function renderBalance(d) {
+      if (balanceChartInst) balanceChartInst.destroy();
+      const years = getYears(d);
+      const totalEquity      = d.balance_sheet?.total_equity_bs ?? d.total_equity;
+      const totalLiabilities = d.total_liabilities ?? d.balance_sheet?.liabilities;
+      balanceChartInst = new Chart(document.getElementById('balanceChart'), {
+        type: 'doughnut',
+        data: {
+          labels: [`حقوق الملكية ${years[0]}`, `المطلوبات ${years[0]}`],
+          datasets: [{
+            data: [getVal(totalEquity, 0), getVal(totalLiabilities, 0)],
+            backgroundColor: ['#1D9E75', '#E24B4A'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '65%',
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function renderBar(d) {
+      if (barChartInst) barChartInst.destroy();
+      const years = getYears(d);
+      const sales            = d.income_statement?.total_sales_revenues ?? d.sales;
+      const grossProfit      = d.income_statement?.gross_profit_is ?? d.gross_profit;
+      const netProfit        = d.income_statement?.net_profit_loss_is ?? d.net_profit;
+      const totalAssets      = d.balance_sheet?.total_assets_bs ?? d.total_assets;
+      const currentAssets    = d.balance_sheet?.total_current_assets ?? d.current_assets;
+      const totalEquity      = d.balance_sheet?.total_equity_bs ?? d.total_equity;
+      const totalLiabilities = d.total_liabilities ?? d.balance_sheet?.liabilities;
+      barChartInst = new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+          labels: years,
+          datasets: [
+            { label: 'إجمالي الأصول',  data: [0,1,2].map(i => +(getVal(totalAssets,i)/1e6).toFixed(2)),      backgroundColor: '#378ADD', borderRadius: 5, borderWidth: 0 },
+            { label: 'الأصول الجارية', data: [0,1,2].map(i => +(getVal(currentAssets,i)/1e6).toFixed(2)),    backgroundColor: '#85B7EB', borderRadius: 5, borderWidth: 0 },
+            { label: 'حقوق الملكية',   data: [0,1,2].map(i => +(getVal(totalEquity,i)/1e6).toFixed(2)),      backgroundColor: '#1D9E75', borderRadius: 5, borderWidth: 0 },
+            { label: 'المطلوبات',       data: [0,1,2].map(i => +(getVal(totalLiabilities,i)/1e6).toFixed(2)),backgroundColor: '#E24B4A', borderRadius: 5, borderWidth: 0 },
+            { label: 'المبيعات',        data: [0,1,2].map(i => +(getVal(sales,i)/1e6).toFixed(2)),            backgroundColor: '#EF9F27', borderRadius: 5, borderWidth: 0 },
+            { label: 'مجمل الربح',      data: [0,1,2].map(i => +(getVal(grossProfit,i)/1e6).toFixed(2)),      backgroundColor: '#8E6DD8', borderRadius: 5, borderWidth: 0 },
+            { label: 'صافي الربح',      data: [0,1,2].map(i => +(getVal(netProfit,i)/1e6).toFixed(2)),        backgroundColor: '#3C3489', borderRadius: 5, borderWidth: 0 },
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: true, position: 'bottom', labels: { font: { size: 11 } } } },
+          scales: {
+            y: { ticks: { callback: v => v + 'M', font: { size: 11 } }, grid: { color: 'rgba(128,128,128,0.08)' } },
+            x: { ticks: { font: { size: 11 }, autoSkip: false, maxRotation: 0 }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function renderRatios(d) {
+      const years = getYears(d);
+      const ratios = [
+        { name: `العائد على الملكية ${years[0]}`, short: 'ROE', value: getTextVal(d.roe, 0),               circleBg: '#E1F5EE', circleColor: '#0f6e56', border: '#1D9E75' },
+        { name: `العائد على الأصول ${years[0]}`,  short: 'ROA', value: getTextVal(d.roa, 0),               circleBg: '#E6F1FB', circleColor: '#185fa5', border: '#378ADD' },
+        { name: `الرافعة المالية ${years[0]}`,    short: 'LEV', value: getTextVal(d.leverage ?? d.Leverage, 0), circleBg: '#FAEEDA', circleColor: '#854f0b', border: '#EF9F27' },
+      ];
+      document.getElementById('ratiosGrid').innerHTML = ratios.map(r => `
+        <div class="ratio-card">
+          <div class="ratio-circle" style="background:${r.circleBg};color:${r.circleColor};border-color:${r.border};">${r.value}</div>
+          <div class="ratio-name">${r.name}</div>
+          <div style="font-size:10px;color:var(--color-text-tertiary);margin-top:3px;">${r.short}</div>
+        </div>`).join('');
+    }
+  </script>
+  <script src="style_excel.js"></script>
+</body>
+</html>

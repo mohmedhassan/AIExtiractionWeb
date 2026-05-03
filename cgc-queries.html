@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trusted IT.ai × CGC – طلبات الضمان</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg:#f5f4f0; --bg-card:#fff; --bg-sec:#eeecea;
+      --text:#1a1a18; --text-2:#5f5e5a; --text-3:#9b9893;
+      --border:rgba(26,26,24,0.09); --border-2:rgba(26,26,24,0.16);
+      --accent:#1D9E75; --accent-d:#0f6e56; --accent-l:#e1f5ee;
+      --blue:#2D6BE4; --blue-l:#e8f0fd;
+      --amber:#D97706; --amber-l:#fef3c7;
+      --red:#DC2626; --red-l:#fee2e2;
+      --purple:#7C3AED; --purple-l:#ede9fe;
+      --nav-h:58px; --sidebar:238px;
+      --font:'Cairo',sans-serif;
+      --r:10px; --r-lg:14px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:var(--font);color:var(--text);background:var(--bg);direction:rtl;min-height:100vh;overflow-x:hidden;}
+
+    /* ─── NAVBAR ─── */
+    .navbar{position:fixed;top:0;right:0;left:0;height:var(--nav-h);background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.2rem;z-index:200;}
+    .nav-toggle{width:34px;height:34px;border:none;background:none;cursor:pointer;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:background .15s;}
+    .nav-toggle:hover{background:var(--bg);}
+    .nav-toggle span{display:block;width:17px;height:1.5px;background:var(--text-2);border-radius:2px;transition:transform .25s,opacity .25s,width .25s;}
+    .sidebar-open .nav-toggle span:nth-child(1){transform:translateY(5.5px) rotate(45deg);}
+    .sidebar-open .nav-toggle span:nth-child(2){opacity:0;width:0;}
+    .sidebar-open .nav-toggle span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg);}
+    .cgc-logo-wrap{display:flex;align-items:center;gap:10px;margin-right:12px;}
+    .cgc-chip{background:var(--accent);color:#fff;font-size:11px;font-weight:900;padding:3px 9px;border-radius:5px;letter-spacing:.05em;}
+    .cgc-x{font-size:12px;color:var(--text-3);font-weight:600;}
+    .nav-brand{font-size:16px;font-weight:900;color:var(--text);letter-spacing:-.3px;}
+    .nav-brand span{color:var(--accent);}
+    .nav-divider{width:1px;height:20px;background:var(--border-2);margin:0 14px;flex-shrink:0;}
+    .nav-breadcrumb{font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:5px;}
+    .nav-breadcrumb a{color:var(--text-3);text-decoration:none;transition:color .15s;}
+    .nav-breadcrumb a:hover{color:var(--text-2);}
+    .nav-breadcrumb .active{color:var(--text-2);font-weight:700;}
+    .nav-spacer{flex:1;}
+    .nav-search{display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--border-2);border-radius:99px;padding:0 13px;height:33px;min-width:200px;transition:border-color .2s,box-shadow .2s;}
+    .nav-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(29,158,117,0.1);}
+    .nav-search input{border:none;background:none;outline:none;font-family:var(--font);font-size:12px;color:var(--text);width:100%;}
+    .nav-search input::placeholder{color:var(--text-3);}
+    .nav-icons{display:flex;gap:2px;margin-right:8px;align-items:center;}
+    .nav-icon{position:relative;width:34px;height:34px;border:none;background:none;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-2);transition:background .15s;}
+    .nav-icon:hover{background:var(--bg);}
+    .nav-badge{position:absolute;top:4px;left:4px;min-width:15px;height:15px;padding:0 3px;background:var(--red);border-radius:99px;border:1.5px solid #fff;font-size:8.5px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;}
+    .nav-user{display:flex;align-items:center;gap:8px;padding:3px 9px 3px 3px;border-radius:99px;cursor:pointer;border:1px solid transparent;margin-right:4px;transition:background .15s;}
+    .nav-user:hover{background:var(--bg);border-color:var(--border);}
+    .avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#1D9E75,#2D6BE4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0;position:relative;}
+    .avatar::after{content:'';position:absolute;bottom:0;left:0;width:8px;height:8px;border-radius:50%;background:#22c55e;border:1.5px solid #fff;}
+    .nav-user-name{font-size:12px;font-weight:700;}
+    .nav-user-role{font-size:10px;color:var(--text-3);}
+    .logout-btn{display:flex;align-items:center;gap:5px;padding:5px 9px;border:none;background:none;cursor:pointer;font-family:var(--font);font-size:11.5px;color:var(--red);border-radius:7px;transition:background .15s;font-weight:600;}
+    .logout-btn:hover{background:var(--red-l);}
+
+    /* ─── NOTIF PANEL ─── */
+    .notif-panel{position:fixed;top:calc(var(--nav-h)+8px);left:14px;width:310px;background:#fff;border:1px solid var(--border-2);border-radius:var(--r-lg);box-shadow:0 8px 30px rgba(0,0,0,0.1);z-index:300;overflow:hidden;transform:translateY(-8px) scale(0.97);opacity:0;pointer-events:none;transition:transform .2s cubic-bezier(.22,.61,.36,1),opacity .2s;}
+    .notif-panel.open{transform:translateY(0) scale(1);opacity:1;pointer-events:all;}
+    .notif-hd{padding:12px 15px 9px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+    .notif-hd-title{font-size:12.5px;font-weight:800;}
+    .notif-hd-mark{font-size:11px;color:var(--accent);cursor:pointer;font-weight:600;}
+    .notif-item{display:flex;gap:9px;align-items:flex-start;padding:11px 15px;border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer;}
+    .notif-item:hover{background:var(--bg);}
+    .notif-item:last-child{border-bottom:none;}
+    .n-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+    .n-text{font-size:12px;color:var(--text);line-height:1.5;}
+    .n-time{font-size:10px;color:var(--text-3);margin-top:1px;}
+
+    /* ─── SIDEBAR ─── */
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.15);z-index:150;backdrop-filter:blur(2px);}
+    .sidebar-open .overlay{display:block;}
+    .sidebar{position:fixed;top:var(--nav-h);right:0;width:var(--sidebar);height:calc(100vh - var(--nav-h));background:#fff;border-left:1px solid var(--border);display:flex;flex-direction:column;z-index:160;transform:translateX(100%);transition:transform .28s cubic-bezier(.22,.61,.36,1);}
+    .sidebar-open .sidebar{transform:translateX(0);}
+    .s-section{font-size:9.5px;font-weight:800;letter-spacing:.12em;color:var(--text-3);text-transform:uppercase;padding:16px 16px 5px;}
+    .s-nav{padding:7px 9px;flex:1;overflow-y:auto;}
+    .s-item{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:var(--r);cursor:pointer;transition:background .15s;color:var(--text-2);font-size:13px;font-weight:600;border:none;background:none;width:100%;text-align:right;font-family:var(--font);}
+    .s-item:hover{background:var(--bg);color:var(--text);}
+    .s-item.active{background:var(--accent-l);color:var(--accent-d);}
+    .s-item.active .s-ico{background:rgba(29,158,117,0.14);color:var(--accent);}
+    .s-ico{width:30px;height:30px;border-radius:7px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .s-badge{margin-right:auto;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:99px;}
+    .s-badge.g{background:var(--accent-l);color:var(--accent-d);}
+    .s-badge.a{background:var(--amber-l);color:var(--amber);}
+    .s-badge.r{background:var(--red-l);color:var(--red);}
+    .s-div{height:1px;background:var(--border);margin:7px 16px;}
+    .s-footer{padding:10px 9px;border-top:1px solid var(--border);}
+    .s-user{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--r);cursor:pointer;transition:background .15s;}
+    .s-user:hover{background:var(--bg);}
+    .s-user-info{flex:1;min-width:0;}
+    .s-user-name{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .s-user-email{font-size:10.5px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+    /* ─── MAIN ─── */
+    .main{margin-top:var(--nav-h);}
+    .wrap{max-width:1200px;margin:0 auto;padding:1.75rem 1.4rem 4rem;}
+
+    /* ─── PAGE HEADER ─── */
+    .page-hd{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:1.4rem;}
+    .page-title{font-size:22px;font-weight:900;letter-spacing:-.4px;}
+    .page-sub{font-size:12.5px;color:var(--text-2);margin-top:3px;}
+    .hd-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+    /* ─── BUTTONS ─── */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid;border-radius:var(--r);font-family:var(--font);font-size:12.5px;font-weight:700;cursor:pointer;transition:background .15s,transform .1s;white-space:nowrap;}
+    .btn:active{transform:scale(0.98);}
+    .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .btn-primary:hover{background:var(--accent-d);border-color:var(--accent-d);}
+    .btn-excel{background:#fff;color:#16a34a;border-color:#16a34a;}
+    .btn-excel:hover{background:#f0fdf4;}
+    .btn-ghost{background:#fff;color:var(--text-2);border-color:var(--border-2);}
+    .btn-ghost:hover{background:var(--bg);}
+    .btn-sm{padding:5px 10px;font-size:11.5px;}
+
+    /* ─── STATS STRIP ─── */
+    .stats-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1.2rem;}
+    .stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);padding:.9rem 1rem;border-right:3px solid transparent;transition:box-shadow .2s;}
+    .stat-card:hover{box-shadow:0 3px 14px rgba(0,0,0,0.06);}
+    .stat-card.g{border-right-color:var(--accent);}
+    .stat-card.b{border-right-color:var(--blue);}
+    .stat-card.a{border-right-color:var(--amber);}
+    .stat-card.r{border-right-color:var(--red);}
+    .stat-card.p{border-right-color:var(--purple);}
+    .stat-val{font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1;}
+    .stat-lbl{font-size:11px;color:var(--text-2);margin-top:4px;}
+    .stat-sub{font-size:10px;color:var(--text-3);margin-top:2px;}
+
+    /* ─── FILTERS BAR ─── */
+    .filters-bar{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);padding:.85rem 1.1rem;margin-bottom:1rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .filter-group{display:flex;align-items:center;gap:6px;}
+    .filter-lbl{font-size:11.5px;font-weight:700;color:var(--text-2);white-space:nowrap;}
+    .filter-select{height:32px;padding:0 10px;border:1px solid var(--border-2);border-radius:7px;font-family:var(--font);font-size:12px;color:var(--text);background:#fff;outline:none;cursor:pointer;transition:border-color .2s;}
+    .filter-select:focus{border-color:var(--accent);}
+    .filter-search{height:32px;padding:0 10px;border:1px solid var(--border-2);border-radius:7px;font-family:var(--font);font-size:12px;color:var(--text);background:#fff;outline:none;min-width:180px;transition:border-color .2s,box-shadow .2s;}
+    .filter-search:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(29,158,117,0.08);}
+    .filter-search::placeholder{color:var(--text-3);}
+    .filter-sep{width:1px;height:20px;background:var(--border-2);margin:0 4px;}
+    .filter-spacer{flex:1;}
+    .results-count{font-size:12px;color:var(--text-3);font-weight:600;white-space:nowrap;}
+
+    /* ─── TABLE ─── */
+    .table-card{background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
+    .table-wrap{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;min-width:1000px;}
+    thead th{font-size:10.5px;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;padding:11px 12px;text-align:right;border-bottom:1px solid var(--border);background:var(--bg);white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s;}
+    thead th:hover{color:var(--text-2);}
+    thead th .sort-icon{display:inline-block;margin-right:3px;opacity:.4;font-size:9px;}
+    thead th.sorted .sort-icon{opacity:1;color:var(--accent);}
+    tbody td{font-size:12px;padding:11px 12px;border-bottom:1px solid var(--border);color:var(--text-2);vertical-align:middle;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:#fafaf8;}
+    tbody tr.selected td{background:var(--accent-l);}
+
+    .td-id{font-weight:800;color:var(--text);font-size:11.5px;}
+    .td-company{font-weight:700;color:var(--text);font-size:12.5px;}
+    .td-company-sec{font-size:10px;color:var(--text-3);margin-top:1px;}
+
+    /* Status pills */
+    .pill{display:inline-block;font-size:10px;font-weight:800;padding:3px 9px;border-radius:99px;white-space:nowrap;}
+    .pill-approved{background:var(--accent-l);color:var(--accent-d);}
+    .pill-rejected{background:var(--red-l);color:var(--red);}
+    .pill-review{background:var(--blue-l);color:var(--blue);}
+    .pill-pending{background:var(--amber-l);color:var(--amber);}
+    .pill-info{background:var(--bg-sec,#eeecea);color:var(--text-3);}
+
+    /* Risk pills */
+    .risk-low{background:var(--accent-l);color:var(--accent-d);}
+    .risk-med{background:var(--amber-l);color:var(--amber);}
+    .risk-high{background:var(--red-l);color:var(--red);}
+
+    /* Score bar */
+    .score-wrap{display:flex;align-items:center;gap:6px;}
+    .score-track{width:52px;height:6px;background:var(--bg);border-radius:99px;overflow:hidden;flex-shrink:0;}
+    .score-fill{height:100%;border-radius:99px;}
+    .score-num{font-size:11.5px;font-weight:800;width:24px;flex-shrink:0;}
+
+    /* Action buttons in row */
+    .row-actions{display:flex;align-items:center;gap:5px;justify-content:flex-end;}
+    .action-btn{width:30px;height:30px;border:1px solid var(--border-2);border-radius:7px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-2);transition:background .15s,border-color .15s,color .15s;position:relative;}
+    .action-btn:hover{border-color:var(--border);background:var(--bg);}
+    .action-btn.excel:hover{border-color:#16a34a;color:#16a34a;background:#f0fdf4;}
+    .action-btn.pdf-approved:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-l);}
+    .action-btn.pdf-rejected:hover{border-color:var(--red);color:var(--red);background:var(--red-l);}
+    .action-btn.view:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-l);}
+    .action-btn[disabled]{opacity:.35;cursor:not-allowed;pointer-events:none;}
+    .tooltip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1a18;color:#fff;font-size:10px;font-weight:600;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;}
+    .action-btn:hover .tooltip{opacity:1;}
+
+    /* ─── PDF LOADING OVERLAY ─── */
+    .pdf-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+    .pdf-overlay.show{display:flex;}
+    .pdf-modal{background:#fff;border-radius:18px;padding:2rem 2.4rem;text-align:center;max-width:360px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.2);}
+    .pdf-spinner{width:48px;height:48px;border:3px solid var(--accent-l);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .pdf-modal-title{font-size:15px;font-weight:800;margin-bottom:6px;}
+    .pdf-modal-sub{font-size:12px;color:var(--text-2);}
+
+    /* ─── TOAST ─── */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a18;color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;z-index:600;opacity:0;transition:transform .3s cubic-bezier(.22,.61,.36,1),opacity .3s;pointer-events:none;display:flex;align-items:center;gap:8px;}
+    .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+    .toast.success .toast-dot{color:var(--accent);}
+    .toast.error .toast-dot{color:var(--red);}
+
+    /* ─── PAGINATION ─── */
+    .pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px;}
+    .page-info{font-size:12px;color:var(--text-3);}
+    .page-btns{display:flex;gap:4px;}
+    .page-btn{width:32px;height:32px;border:1px solid var(--border-2);border-radius:7px;background:#fff;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:700;color:var(--text-2);display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s,color .15s;}
+    .page-btn:hover{background:var(--bg);border-color:var(--border);}
+    .page-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .page-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+    @media(max-width:768px){.nav-search,.nav-breadcrumb,.nav-divider{display:none;}.stats-strip{grid-template-columns:repeat(2,1fr);}}
+  </style>
+</head>
+<body>
+
+<!-- ─── NAVBAR ─── -->
+<nav class="navbar">
+  <button class="nav-toggle" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+  <div class="cgc-logo-wrap" style="margin-right:12px;">
+    <div class="cgc-chip">CGC</div>
+    <div class="cgc-x">×</div>
+    <div class="nav-brand">Trusted IT<span>.</span>ai</div>
+  </div>
+  <div class="nav-divider"></div>
+  <div class="nav-breadcrumb">
+    <a href="cgc-dashboard.html">الرئيسية</a>
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    <span class="active">طلبات الضمان</span>
+  </div>
+  <div class="nav-spacer"></div>
+  <div class="nav-search">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="ابحث عن شركة أو رقم طلب..." oninput="globalSearch(this.value)" />
+  </div>
+  <div class="nav-icons">
+    <button class="nav-icon" onclick="toggleNotif(event)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="nav-badge" id="notifBadge">4</span>
+    </button>
+    <button class="nav-icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg>
+    </button>
+  </div>
+  <div class="nav-user">
+    <div class="avatar">AD</div>
+    <div>
+      <div class="nav-user-name">Admin</div>
+      <div class="nav-user-role">محلل ائتماني</div>
+    </div>
+  </div>
+  <button class="logout-btn">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    خروج
+  </button>
+</nav>
+
+<!-- ─── NOTIF PANEL ─── -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-hd"><span class="notif-hd-title">الإشعارات</span><span class="notif-hd-mark" onclick="markRead()">تحديد الكل كمقروء</span></div>
+  <div class="notif-item"><span class="n-dot" style="background:var(--red)"></span><div><div class="n-text">طلب ضمان #GRN-031 – الملف الائتماني ناقص</div><div class="n-time">منذ 8 دقائق</div></div></div>
+  <div class="notif-item"><span class="n-dot" style="background:var(--amber)"></span><div><div class="n-text">شركة الرواد: نسبة المديونية تجاوزت 65%</div><div class="n-time">منذ 35 دقيقة</div></div></div>
+  <div class="notif-item"><span class="n-dot" style="background:var(--accent)"></span><div><div class="n-text">تمت الموافقة على ضمان شركة النيل – 12M EGP</div><div class="n-time">منذ 2 ساعة</div></div></div>
+  <div class="notif-item"><span class="n-dot" style="background:var(--blue)"></span><div><div class="n-text">تقرير المحفظة الشهري متاح للمراجعة</div><div class="n-time">منذ 5 ساعات</div></div></div>
+</div>
+
+<!-- ─── OVERLAY & SIDEBAR ─── -->
+<div class="overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar">
+  <div class="s-nav">
+    <div class="s-section">الرئيسية</div>
+    <button class="s-item" onclick="navTo(this)">
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
+      لوحة الضمان
+    </button>
+    <button class="s-item active" onclick="navTo(this)">
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      طلبات الضمان
+      <span class="s-badge a">7</span>
+    </button>
+    <button class="s-item" onclick="navTo(this)">
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+      مؤشرات المحفظة
+      <span class="s-badge g">جديد</span>
+    </button>
+    <div class="s-section">الملفات الائتمانية</div>
+    <button class="s-item" onclick="navTo(this)">
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+      رفع ملف ائتماني
+    </button>
+    <button class="s-item" onclick="navTo(this)">
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      تحليل مالي
+    </button>
+    <button class="s-item" onclick="navTo(this)">
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+      تاريخ الائتمان
+    </button>
+    <button class="s-item" onclick="navTo(this)">
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></span>
+      تنبيهات المخاطر
+      <span class="s-badge r">3</span>
+    </button>
+    <div class="s-div"></div>
+    <div class="s-section">الأدوات</div>
+    <button class="s-item" onclick="navTo(this)">
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      المحلل الذكي AI
+      <span class="s-badge g">beta</span>
+    </button>
+    <button class="s-item" onclick="navTo(this)">
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></span>
+      تقرير قرار الضمان
+    </button>
+  </div>
+  <div class="s-footer">
+    <div class="s-user">
+      <div class="avatar" style="width:32px;height:32px;font-size:10.5px;">AD</div>
+      <div class="s-user-info">
+        <div class="s-user-name">Admin</div>
+        <div class="s-user-email">admin@trusted-it.ai</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ─── PDF LOADING OVERLAY ─── -->
+<div class="pdf-overlay" id="pdfOverlay">
+  <div class="pdf-modal">
+    <div class="pdf-spinner"></div>
+    <div class="pdf-modal-title">جاري إنشاء تقرير القرار</div>
+    <div class="pdf-modal-sub" id="pdfModalSub">يتم تجميع بيانات الملف الائتماني...</div>
+  </div>
+</div>
+
+<!-- ─── TOAST ─── -->
+<div class="toast" id="toast">
+  <span class="toast-dot">●</span>
+  <span id="toastMsg"></span>
+</div>
+
+<!-- ─── MAIN ─── -->
+<div class="main">
+<div class="wrap">
+
+  <!-- Page Header -->
+  <div class="page-hd">
+    <div>
+      <div class="page-title">طلبات الضمان الائتماني</div>
+      <div class="page-sub">جميع الطلبات المُدخلة في النظام · إجمالي <strong id="totalCount">0</strong> طلب</div>
+    </div>
+    <div class="hd-actions">
+      <button class="btn btn-ghost btn-sm" onclick="downloadAllExcel()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        تصدير الكل Excel
+      </button>
+      <button class="btn btn-primary btn-sm">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        طلب ضمان جديد
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Strip -->
+  <div class="stats-strip">
+    <div class="stat-card g">
+      <div class="stat-val" id="stat-total">38</div>
+      <div class="stat-lbl">إجمالي الطلبات</div>
+      <div class="stat-sub">منذ بداية العام</div>
+    </div>
+    <div class="stat-card g">
+      <div class="stat-val" id="stat-approved">24</div>
+      <div class="stat-lbl">موافق عليها</div>
+      <div class="stat-sub">347M EGP ضمان</div>
+    </div>
+    <div class="stat-card b">
+      <div class="stat-val" id="stat-review">7</div>
+      <div class="stat-lbl">تحت الدراسة</div>
+      <div class="stat-sub">متوسط 3.2 أيام</div>
+    </div>
+    <div class="stat-card a">
+      <div class="stat-val" id="stat-pending">3</div>
+      <div class="stat-lbl">معلقة</div>
+      <div class="stat-sub">تحتاج بيانات إضافية</div>
+    </div>
+    <div class="stat-card r">
+      <div class="stat-val" id="stat-rejected">4</div>
+      <div class="stat-lbl">مرفوضة</div>
+      <div class="stat-sub">مخاطر مرتفعة</div>
+    </div>
+    <div class="stat-card p">
+      <div class="stat-val">82</div>
+      <div class="stat-lbl">متوسط التصنيف</div>
+      <div class="stat-sub">من 100 نقطة</div>
+    </div>
+  </div>
+
+  <!-- Filters Bar -->
+  <div class="filters-bar">
+    <div class="filter-group">
+      <span class="filter-lbl">الحالة:</span>
+      <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+        <option value="">الكل</option>
+        <option value="approved">موافقة</option>
+        <option value="review">تحت الدراسة</option>
+        <option value="pending">معلق</option>
+        <option value="rejected">مرفوض</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-lbl">المخاطر:</span>
+      <select class="filter-select" id="filterRisk" onchange="applyFilters()">
+        <option value="">الكل</option>
+        <option value="low">منخفض</option>
+        <option value="medium">متوسط</option>
+        <option value="high">مرتفع</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-lbl">البنك:</span>
+      <select class="filter-select" id="filterBank" onchange="applyFilters()">
+        <option value="">الكل</option>
+        <option value="بنك مصر">بنك مصر</option>
+        <option value="البنك الأهلي">البنك الأهلي</option>
+        <option value="QNB مصر">QNB مصر</option>
+        <option value="بنك القاهرة">بنك القاهرة</option>
+        <option value="CIB">CIB</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-lbl">القطاع:</span>
+      <select class="filter-select" id="filterSector" onchange="applyFilters()">
+        <option value="">الكل</option>
+        <option value="تجارة">تجارة واستيراد</option>
+        <option value="صناعة">صناعة</option>
+        <option value="عقارات">عقارات ومقاولات</option>
+        <option value="خدمات">خدمات</option>
+        <option value="زراعة">زراعة</option>
+      </select>
+    </div>
+    <div class="filter-sep"></div>
+    <input class="filter-search" id="filterSearch" type="text" placeholder="بحث باسم الشركة أو رقم الطلب..." oninput="applyFilters()" />
+    <div class="filter-spacer"></div>
+    <button class="btn btn-ghost btn-sm" onclick="resetFilters()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.66"/></svg>
+      مسح
+    </button>
+    <span class="results-count" id="resultsCount"></span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-wrap">
+      <table id="mainTable">
+        <thead>
+          <tr>
+            <th onclick="sortBy('id')"><span class="sort-icon">↕</span>رقم الطلب</th>
+            <th onclick="sortBy('company')"><span class="sort-icon">↕</span>الشركة</th>
+            <th onclick="sortBy('bank')"><span class="sort-icon">↕</span>البنك</th>
+            <th onclick="sortBy('loan')"><span class="sort-icon">↕</span>قيمة القرض</th>
+            <th onclick="sortBy('guarantee')"><span class="sort-icon">↕</span>قيمة الضمان</th>
+            <th onclick="sortBy('score')"><span class="sort-icon">↕</span>التصنيف</th>
+            <th onclick="sortBy('risk')"><span class="sort-icon">↕</span>المخاطر</th>
+            <th onclick="sortBy('status')"><span class="sort-icon">↕</span>الحالة</th>
+            <th onclick="sortBy('analyst')"><span class="sort-icon">↕</span>المحلل</th>
+            <th onclick="sortBy('date')"><span class="sort-icon">↕</span>التاريخ</th>
+            <th style="cursor:default;">الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <span class="page-info" id="pageInfo"></span>
+      <div class="page-btns" id="pageBtns"></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ─── DATA ───
+const ALL_DATA = [
+    {id:'#GRN-030',company:'شركة الجزيرة للاستيراد',sector:'تجارة',bank:'البنك الأهلي',loan:50000000,guarantee:37500000,coverage:75,score:88,risk:'low',status:'pending',analyst:'سارة محمد',date:'2026-05-03'},
+
+  {id:'#GRN-031',company:'شركة النيل للتجارة',sector:'تجارة',bank:'بنك مصر',loan:25000000,guarantee:18750000,coverage:75,score:82,risk:'low',status:'approved',analyst:'أحمد علي',date:'2025-01-26'},
+ /* {id:'#GRN-029',company:'مجموعة الرواد للصناعة',sector:'صناعة',bank:'QNB مصر',loan:80000000,guarantee:0,coverage:0,score:48,risk:'high',status:'review',analyst:'خالد عمر',date:'2025-01-22'},
+  {id:'#GRN-028',company:'شركة الخليج للخدمات',sector:'خدمات',bank:'بنك القاهرة',loan:30000000,guarantee:0,coverage:0,score:62,risk:'medium',status:'pending',analyst:'منى حسن',date:'2025-01-21'},
+  {id:'#GRN-027',company:'شركة الفرسان للمقاولات',sector:'عقارات',bank:'البنك الأهلي',loan:120000000,guarantee:0,coverage:0,score:41,risk:'high',status:'rejected',analyst:'أحمد علي',date:'2025-01-19'},
+  {id:'#GRN-026',company:'شركة البنيان العقارية',sector:'عقارات',bank:'بنك مصر',loan:45000000,guarantee:33750000,coverage:75,score:75,risk:'low',status:'approved',analyst:'سارة محمد',date:'2025-01-17'},
+  {id:'#GRN-025',company:'شركة النور للتوزيع',sector:'تجارة',bank:'CIB',loan:15000000,guarantee:0,coverage:0,score:58,risk:'medium',status:'review',analyst:'خالد عمر',date:'2025-01-16'},
+  {id:'#GRN-024',company:'مؤسسة الربيع الزراعية',sector:'زراعة',bank:'البنك الأهلي',loan:20000000,guarantee:15000000,coverage:75,score:79,risk:'low',status:'approved',analyst:'منى حسن',date:'2025-01-14'},
+  {id:'#GRN-023',company:'شركة الأمل للمقاولات',sector:'عقارات',bank:'بنك القاهرة',loan:60000000,guarantee:0,coverage:0,score:44,risk:'high',status:'rejected',analyst:'أحمد علي',date:'2025-01-12'},
+  {id:'#GRN-022',company:'شركة الشرق للخدمات اللوجستية',sector:'خدمات',bank:'QNB مصر',loan:35000000,guarantee:26250000,coverage:75,score:81,risk:'low',status:'approved',analyst:'سارة محمد',date:'2025-01-10'},
+  {id:'#GRN-021',company:'مجموعة الغرب الصناعية',sector:'صناعة',bank:'بنك مصر',loan:90000000,guarantee:0,coverage:0,score:55,risk:'medium',status:'pending',analyst:'خالد عمر',date:'2025-01-08'},
+  {id:'#GRN-020',company:'شركة الوادي للزراعة',sector:'زراعة',bank:'البنك الأهلي',loan:12000000,guarantee:9000000,coverage:75,score:84,risk:'low',status:'approved',analyst:'منى حسن',date:'2025-01-06'},
+  {id:'#GRN-019',company:'شركة الدلتا التجارية',sector:'تجارة',bank:'CIB',loan:28000000,guarantee:21000000,coverage:75,score:77,risk:'low',status:'approved',analyst:'أحمد علي',date:'2025-01-04'},
+  {id:'#GRN-018',company:'شركة النصر للصناعات الغذائية',sector:'صناعة',bank:'بنك مصر',loan:55000000,guarantee:0,coverage:0,score:52,risk:'medium',status:'review',analyst:'سارة محمد',date:'2025-01-02'},
+  {id:'#GRN-017',company:'شركة الفجر للعقارات',sector:'عقارات',bank:'QNB مصر',loan:75000000,guarantee:0,coverage:0,score:39,risk:'high',status:'rejected',analyst:'خالد عمر',date:'2024-12-30'},
+  {id:'#GRN-016',company:'شركة المستقبل للتكنولوجيا',sector:'خدمات',bank:'CIB',loan:18000000,guarantee:13500000,coverage:75,score:86,risk:'low',status:'approved',analyst:'منى حسن',date:'2024-12-28'},
+  {id:'#GRN-015',company:'مجموعة القمة التجارية',sector:'تجارة',bank:'البنك الأهلي',loan:42000000,guarantee:31500000,coverage:75,score:80,risk:'low',status:'approved',analyst:'أحمد علي',date:'2024-12-25'},
+*/  {id:'#GRN-014',company:'شركة البحر للاستيراد',sector:'تجارة',bank:'بنك القاهرة',loan:33000000,guarantee:0,coverage:0,score:61,risk:'medium',status:'pending',analyst:'سارة محمد',date:'2024-12-22'},
+
+
+  ];
+
+let filtered = [...ALL_DATA];
+let sortField = 'date';
+let sortDir = -1;
+let page = 1;
+const PAGE_SIZE = 10;
+
+// ─── SIDEBAR / NOTIF ───
+function toggleSidebar(){document.body.classList.toggle('sidebar-open');}
+function closeSidebar(){document.body.classList.remove('sidebar-open');}
+function navTo(el){document.querySelectorAll('.s-item').forEach(i=>i.classList.remove('active'));el.classList.add('active');closeSidebar();}
+function toggleNotif(e){e.stopPropagation();document.getElementById('notifPanel').classList.toggle('open');}
+function markRead(){document.querySelectorAll('.n-dot').forEach(d=>d.style.background='#ccc');const b=document.getElementById('notifBadge');if(b)b.remove();}
+document.addEventListener('click',()=>document.getElementById('notifPanel').classList.remove('open'));
+document.getElementById('notifPanel').addEventListener('click',e=>e.stopPropagation());
+
+// ─── UTILS ───
+function fmt(n){if(!n)return'–';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n.toLocaleString();}
+function fmtEGP(n){if(!n)return'–';return'EGP '+fmt(n);}
+
+function statusLabel(s){
+  const m={approved:'موافقة',review:'تحت الدراسة',pending:'معلق',rejected:'مرفوض'};
+  return m[s]||s;
+}
+function statusClass(s){
+  const m={approved:'pill-approved',review:'pill-review',pending:'pill-pending',rejected:'pill-rejected'};
+  return m[s]||'pill-info';
+}
+function riskLabel(r){const m={low:'منخفض',medium:'متوسط',high:'مرتفع'};return m[r]||r;}
+function riskClass(r){const m={low:'risk-low',medium:'risk-med',high:'risk-high'};return m[r]||'';}
+function scoreColor(s){if(s>=80)return'#1D9E75';if(s>=65)return'#2D6BE4';if(s>=50)return'#D97706';return'#DC2626';}
+
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.className='toast '+(type==='success'?'success':'error');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ─── FILTERS & SEARCH ───
+function applyFilters(){
+  const s=document.getElementById('filterStatus').value;
+  const r=document.getElementById('filterRisk').value;
+  const b=document.getElementById('filterBank').value;
+  const sec=document.getElementById('filterSector').value;
+  const q=document.getElementById('filterSearch').value.toLowerCase();
+  filtered=ALL_DATA.filter(row=>{
+    if(s&&row.status!==s)return false;
+    if(r&&row.risk!==r)return false;
+    if(b&&row.bank!==b)return false;
+    if(sec&&!row.sector.includes(sec))return false;
+    if(q&&!row.company.includes(q)&&!row.id.toLowerCase().includes(q))return false;
+    return true;
+  });
+  page=1;
+  renderTable();
+}
+function globalSearch(v){document.getElementById('filterSearch').value=v;applyFilters();}
+function resetFilters(){
+  ['filterStatus','filterRisk','filterBank','filterSector'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('filterSearch').value='';
+  filtered=[...ALL_DATA];page=1;renderTable();
+}
+
+// ─── SORT ───
+function sortBy(field){
+  if(sortField===field)sortDir*=-1;else{sortField=field;sortDir=-1;}
+  filtered.sort((a,b)=>{
+    let av=a[field],bv=b[field];
+    if(typeof av==='string')return av.localeCompare(bv,'ar')*sortDir;
+    return(av-bv)*sortDir;
+  });
+  document.querySelectorAll('thead th').forEach(th=>th.classList.remove('sorted'));
+  renderTable();
+}
+
+// ─── RENDER ───
+function renderTable(){
+  const total=filtered.length;
+  document.getElementById('totalCount').textContent=ALL_DATA.length;
+  document.getElementById('resultsCount').textContent=`${total} نتيجة`;
+
+  const start=(page-1)*PAGE_SIZE;
+  const end=Math.min(start+PAGE_SIZE,total);
+  const pageData=filtered.slice(start,end);
+
+  document.getElementById('pageInfo').textContent=`عرض ${start+1}–${end} من ${total} طلب`;
+
+  // Render rows
+  const tbody=document.getElementById('tableBody');
+  tbody.innerHTML=pageData.map(row=>{
+    const sc=scoreColor(row.score);
+    const pdfBtn=row.status==='approved'
+      ?`<button class="action-btn pdf-approved" onclick="generatePDF('${row.id}','${row.status}')" title="تقرير الموافقة PDF">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="tooltip">تقرير الموافقة PDF</span>
+        </button>`
+      : row.status==='rejected'
+      ?`<button class="action-btn pdf-rejected" onclick="generatePDF('${row.id}','${row.status}')" title="تقرير الرفض PDF">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="tooltip">تقرير الرفض PDF</span>
+        </button>`
+      :`<button class="action-btn" disabled title="في انتظار القرار">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="tooltip">في انتظار القرار</span>
+        </button>`;
+    return `<tr>
+      <td><span class="td-id">${row.id}</span></td>
+      <td>
+        <div class="td-company">${row.company}</div>
+        <div class="td-company-sec">${row.sector}</div>
+      </td>
+      <td>${row.bank}</td>
+      <td style="font-weight:700;color:var(--text)">${fmtEGP(row.loan)}</td>
+      <td style="font-weight:700;color:${row.guarantee?'var(--accent-d)':'var(--text-3)'}">${row.guarantee?fmtEGP(row.guarantee)+(row.coverage?' <span style="font-size:10px;font-weight:600;color:var(--text-3)">('+row.coverage+'%)</span>':''):'–'}</td>
+      <td>
+        <div class="score-wrap">
+          <div class="score-track"><div class="score-fill" style="width:${row.score}%;background:${sc};"></div></div>
+          <span class="score-num" style="color:${sc}">${row.score}</span>
+        </div>
+      </td>
+      <td><span class="pill ${riskClass(row.risk)}">${riskLabel(row.risk)}</span></td>
+      <td><span class="pill ${statusClass(row.status)}">${statusLabel(row.status)}</span></td>
+      <td>${row.analyst}</td>
+      <td style="color:var(--text-3);font-size:11px">${row.date}</td>
+      <td>
+        <div class="row-actions">
+          <button class="action-btn view" onclick="viewRow('${row.id}')" title="عرض الملف">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="tooltip">عرض الملف</span>
+          </button>
+          <button class="action-btn excel" onclick="downloadExcel('${row.id}')" title="تحميل Excel المخاطر">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span class="tooltip">Excel المخاطر</span>
+          </button>
+          ${pdfBtn}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Pagination
+  const totalPages=Math.ceil(total/PAGE_SIZE);
+  const pb=document.getElementById('pageBtns');
+  pb.innerHTML='';
+
+  const prevBtn=document.createElement('button');
+  prevBtn.className='page-btn';prevBtn.textContent='←';
+  prevBtn.disabled=page<=1;
+  prevBtn.onclick=()=>{if(page>1){page--;renderTable();}};
+  pb.appendChild(prevBtn);
+
+  for(let i=1;i<=totalPages;i++){
+    if(totalPages>7&&i>2&&i<totalPages-1&&Math.abs(i-page)>1)continue;
+    const btn=document.createElement('button');
+    btn.className='page-btn'+(i===page?' active':'');
+    btn.textContent=i;
+    btn.onclick=(()=>{const pg=i;return()=>{page=pg;renderTable();};})();
+    pb.appendChild(btn);
+  }
+
+  const nextBtn=document.createElement('button');
+  nextBtn.className='page-btn';nextBtn.textContent='→';
+  nextBtn.disabled=page>=totalPages;
+  nextBtn.onclick=()=>{if(page<totalPages){page++;renderTable();}};
+  pb.appendChild(nextBtn);
+
+  updateStats();
+}
+
+function updateStats(){
+  document.getElementById('stat-total').textContent=ALL_DATA.length;
+  document.getElementById('stat-approved').textContent=ALL_DATA.filter(r=>r.status==='approved').length;
+  document.getElementById('stat-review').textContent=ALL_DATA.filter(r=>r.status==='review').length;
+  document.getElementById('stat-pending').textContent=ALL_DATA.filter(r=>r.status==='pending').length;
+  document.getElementById('stat-rejected').textContent=ALL_DATA.filter(r=>r.status==='rejected').length;
+}
+
+// ─── VIEW ───
+function viewRow(id){
+  showToast('شاشة عرض الملف — قريباً ✦','success');
+}
+
+// ─── EXCEL DOWNLOAD (الفنكشن بتاعتك) ───
+function downloadExcel(id){
+  const row=ALL_DATA.find(r=>r.id===id);
+  if(!row){showToast('لم يتم العثور على الطلب','error');return;}
+
+  // ── this is the downloadExcel function you provided ──
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1 — Request Info
+  const infoData=[
+    ['تقرير تحليل المخاطر الائتمانية',''],
+    ['Credit Risk Analysis Report',''],
+    ['',''],
+    ['رقم الطلب',row.id],
+    ['اسم الشركة',row.company],
+    ['القطاع',row.sector],
+    ['البنك الطالب',row.bank],
+    ['قيمة القرض المطلوب',row.loan.toLocaleString()+' EGP'],
+    ['قيمة الضمان',row.guarantee?row.guarantee.toLocaleString()+' EGP':'–'],
+    ['نسبة التغطية',row.coverage?row.coverage+'%':'–'],
+    ['التصنيف الائتماني',row.score+' / 100'],
+    ['مستوى المخاطر',riskLabel(row.risk)],
+    ['حالة الطلب',statusLabel(row.status)],
+    ['المحلل المسؤول',row.analyst],
+    ['تاريخ الطلب',row.date],
+    ['تاريخ التقرير',new Date().toLocaleDateString('ar-EG')],
+  ];
+  const ws1=XLSX.utils.aoa_to_sheet(infoData);
+  ws1['!cols']=[{wch:30},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws1,'بيانات الطلب');
+
+  // Sheet 2 — Risk Factors
+  const riskData=[
+    ['عامل المخاطرة','الدرجة','التقييم','الملاحظات'],
+    ['السيولة الحالية',78,'جيد','نسبة السيولة 2.59x – أعلى من المعدل'],
+    ['نسبة الديون / الأصول',row.risk==='high'?35:55,row.risk==='high'?'جيد':'متوسط','ضمن الحدود المقبولة'],
+    ['التدفق النقدي التشغيلي',82,'ممتاز','إيجابي ومتنامٍ سنوياً'],
+    ['الربحية الصافية',69,'جيد','هامش 16% في قطاع التجارة'],
+    ['مخاطر القطاع',row.sector==='صناعة'?35:38,'مرتفع نسبياً','تقلبات سعر الصرف وسلاسل الإمداد'],
+    ['السجل الائتماني',91,'ممتاز','لا توجد تعثرات سابقة'],
+    ['جودة الإدارة',75,'جيد','خبرة '+row.id.replace('#GRN-','')+ ' في قطاع الأعمال'],
+    ['التغطية الضامنة',62,'متوسط','ضمان جزئي – مقبول'],
+    ['','','',''],
+    ['التصنيف الإجمالي',row.score,'من 100 نقطة',''],
+    ['قرار اللجنة','',statusLabel(row.status),''],
+  ];
+  const ws2=XLSX.utils.aoa_to_sheet(riskData);
+  ws2['!cols']=[{wch:28},{wch:12},{wch:16},{wch:40}];
+  XLSX.utils.book_append_sheet(wb,ws2,'مصفوفة المخاطر');
+
+  // Sheet 3 — Financial Summary
+  const finData=[
+    ['المؤشر المالي','FY 2022','FY 2023','FY 2024','الاتجاه'],
+    ['إجمالي الإيرادات (EGP)','192,079,384','218,340,000','241,650,000','↑ +10.7%'],
+    ['مجمل الربح (EGP)','43,467,565','51,200,000','58,900,000','↑ +15.0%'],
+    ['صافي الربح (EGP)','30,831,689','36,450,000','42,100,000','↑ +15.5%'],
+    ['إجمالي الأصول (EGP)','218,777,149','245,600,000','271,300,000','↑ +10.5%'],
+    ['حقوق الملكية (EGP)','136,766,816','158,200,000','179,400,000','↑ +13.4%'],
+    ['إجمالي المطلوبات (EGP)','82,010,333','87,400,000','91,900,000','↑ +5.1%'],
+    ['التدفق النقدي التشغيلي','605,000','8,200,000','11,400,000','↑ +39.0%'],
+    ['','','','',''],
+    ['العائد على الملكية ROE','85.4%','87.1%','89.2%','↑'],
+    ['العائد على الأصول ROA','66.3%','68.5%','70.1%','↑'],
+    ['الرافعة المالية','17.9%','17.1%','16.8%','↓ (إيجابي)'],
+  ];
+  const ws3=XLSX.utils.aoa_to_sheet(finData);
+  ws3['!cols']=[{wch:30},{wch:18},{wch:18},{wch:18},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws3,'التحليل المالي');
+
+  XLSX.writeFile(wb,`CGC_Risk_Report_${row.id.replace('#','')}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  showToast('✓ تم تحميل تقرير المخاطر Excel بنجاح','success');
+}
+
+// ─── DOWNLOAD ALL EXCEL ───
+function downloadAllExcel(){
+  const wb=XLSX.utils.book_new();
+  const headers=['رقم الطلب','الشركة','القطاع','البنك','قيمة القرض','قيمة الضمان','التصنيف','المخاطر','الحالة','المحلل','التاريخ'];
+  const rows=filtered.map(r=>[r.id,r.company,r.sector,r.bank,r.loan,r.guarantee||0,r.score,riskLabel(r.risk),statusLabel(r.status),r.analyst,r.date]);
+  const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+  ws['!cols']=headers.map((_,i)=>({wch:[14,28,14,18,16,16,12,14,14,14,14][i]}));
+  XLSX.utils.book_append_sheet(wb,ws,'طلبات الضمان');
+  XLSX.writeFile(wb,`CGC_All_Queries_${new Date().toISOString().split('T')[0]}.xlsx`);
+  showToast('✓ تم تصدير جميع الطلبات','success');
+}
+
+// ─── PDF GENERATION ───
+function generatePDF(id, status){
+  const row=ALL_DATA.find(r=>r.id===id);
+  if(!row)return;
+
+  const overlay=document.getElementById('pdfOverlay');
+  const sub=document.getElementById('pdfModalSub');
+  overlay.classList.add('show');
+
+  const steps=['جاري تجميع بيانات الملف الائتماني...','جاري احتساب مؤشرات المخاطر...','جاري صياغة قرار اللجنة...','جاري تصدير التقرير...'];
+  let si=0;
+  sub.textContent=steps[0];
+  const iv=setInterval(()=>{si++;if(si<steps.length)sub.textContent=steps[si];},700);
+
+  setTimeout(()=>{
+    clearInterval(iv);
+    overlay.classList.remove('show');
+    // In real system: call your PDF API here
+    // For demo: link to the generated PDF
+    const link=document.createElement('a');
+    link.href='cgc_decision_report.pdf';
+    link.download=`CGC_Decision_${row.id.replace('#','')}_${row.status.toUpperCase()}.pdf`;
+    link.click();
+    showToast(`✓ تم تحميل تقرير ${status==='approved'?'الموافقة':'الرفض'} بنجاح`,'success');
+  },2900);
+}
+
+// ─── INIT ───
+renderTable();
+</script>
+</body>
+</html>
