@@ -568,7 +568,6 @@
       const user = JSON.parse(userData);
       document.getElementById('navAvatar').textContent       = user.initials;
       document.getElementById('navUserName').textContent     = user.name;
-      document.getElementById('sidebarAvatar').textContent   = user.initials;
       document.getElementById('sidebarUserName').textContent = user.name;
       document.getElementById('sidebarUserEmail').textContent = user.email;
       requestAnimationFrame(() => document.body.classList.add('ready'));
