@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OCR – تحويل PDF إلى Searchable – Trusted IT.ai</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-background-primary: #f7f7f7;
+      --color-background-secondary: #f0efeb;
+      --color-background-tertiary: #FFF;
+      --color-background-info: #e6f1fb;
+      --color-background-success: #e1f5ee;
+      --color-background-warning: #faeeda;
+      --color-background-danger: #fcebeb;
+      --color-text-primary: #1a1a18;
+      --color-text-secondary: #5f5e5a;
+      --color-text-tertiary: #888780;
+      --color-text-info: #185fa5;
+      --color-text-success: #0f6e56;
+      --color-text-warning: #854f0b;
+      --color-text-danger: #a32d2d;
+      --color-border-tertiary: rgba(26,26,24,0.1);
+      --color-border-secondary: rgba(26,26,24,0.18);
+      --accent: #1D9E75;
+      --accent-dark: #0f6e56;
+      --accent-light: #e1f5ee;
+      --sidebar-w: 240px;
+      --nav-h: 60px;
+      --font-sans: 'Cairo', sans-serif;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 18px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      color: var(--color-text-primary);
+      min-height: 100vh;
+      direction: rtl;
+      overflow-x: hidden;
+      background: var(--color-background-primary);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    body.ready { opacity: 1; }
+
+    /* ══ LOADING OVERLAY ══ */
+    .pdf-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,25,20,0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .pdf-overlay.visible { opacity: 1; pointer-events: all; }
+    .pdf-modal {
+      background: var(--color-background-tertiary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08);
+      padding: 2.5rem 2.8rem;
+      text-align: center; min-width: 320px; max-width: 400px;
+      transform: translateY(12px) scale(0.97);
+      transition: transform 0.35s cubic-bezier(.22,.61,.36,1);
+    }
+    .pdf-overlay.visible .pdf-modal { transform: translateY(0) scale(1); }
+    .pdf-spinner {
+      width: 56px; height: 56px;
+      margin: 0 auto 1.4rem; position: relative;
+    }
+    .pdf-spinner::before, .pdf-spinner::after {
+      content: ''; position: absolute; border-radius: 50%;
+    }
+    .pdf-spinner::before {
+      inset: 0;
+      border: 3px solid var(--accent-light);
+      border-top-color: var(--accent);
+      animation: spin 0.85s linear infinite;
+    }
+    .pdf-spinner::after {
+      inset: 12px;
+      background: var(--accent-light);
+      animation: pulse 0.85s ease-in-out infinite alternate;
+    }
+    @keyframes spin  { to { transform: rotate(360deg); } }
+    @keyframes pulse { from { transform: scale(0.7); opacity: 0.5; } to { transform: scale(1); opacity: 1; } }
+    .pdf-modal-title { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+    .pdf-modal-sub   { font-size: 13px; color: var(--color-text-tertiary); line-height: 1.6; min-height: 40px; transition: opacity 0.25s; }
+    .pdf-modal-pages { font-size: 12px; font-weight: 700; color: var(--accent); margin-top: 6px; min-height: 18px; }
+    .pdf-progress { margin-top: 1.2rem; height: 3px; border-radius: 99px; background: var(--color-background-secondary); overflow: hidden; }
+    .pdf-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #378ADD); border-radius: 99px; transition: width 0.5s ease; }
+
+    /* ══ NAVBAR ══ */
+    .navbar {
+      position: fixed; top: 0; right: 0; left: 0;
+      height: var(--nav-h);
+      background: var(--color-background-tertiary);
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      display: flex; align-items: center;
+      padding: 0 1.25rem; z-index: 200;
+    }
+    .nav-sidebar-toggle {
+      width: 36px; height: 36px; border: none; background: none; cursor: pointer;
+      border-radius: var(--radius-sm);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4.5px;
+      transition: background 0.15s; flex-shrink: 0;
+    }
+    .nav-sidebar-toggle:hover { background: var(--color-background-primary); }
+    .nav-sidebar-toggle span { display: block; width: 18px; height: 1.5px; background: var(--color-text-secondary); border-radius: 2px; transition: transform 0.25s, opacity 0.25s, width 0.25s; }
+    .sidebar-open .nav-sidebar-toggle span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .sidebar-open .nav-sidebar-toggle span:nth-child(2) { opacity: 0; width: 0; }
+    .sidebar-open .nav-sidebar-toggle span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+    .nav-brand { font-size: 18px; font-weight: 900; letter-spacing: -0.5px; margin-right: 12px; }
+    .nav-brand span { color: var(--accent); }
+    .nav-divider { width: 0.5px; height: 22px; background: var(--color-border-secondary); margin: 0 14px; }
+    .nav-breadcrumb { font-size: 12.5px; color: var(--color-text-tertiary); display: flex; align-items: center; gap: 6px; }
+    .nav-breadcrumb .crumb-active { color: var(--color-text-secondary); font-weight: 600; }
+    .nav-spacer { flex: 1; }
+    .nav-icon-btn { width: 36px; height: 36px; border: none; background: none; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); transition: background 0.15s; }
+    .nav-icon-btn:hover { background: var(--color-background-primary); }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #1D9E75, #378ADD); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; position: relative; }
+    .avatar::after { content: ''; position: absolute; bottom: 0; left: 0; width: 9px; height: 9px; border-radius: 50%; background: #22c55e; border: 1.5px solid var(--color-background-tertiary); }
+    .nav-user { display: flex; align-items: center; gap: 9px; padding: 4px 10px 4px 4px; border-radius: 99px; cursor: pointer; transition: background 0.15s; border: 0.5px solid transparent; margin-right: 4px; }
+    .nav-user:hover { background: var(--color-background-primary); border-color: var(--color-border-tertiary); }
+    .nav-user-name { font-size: 12.5px; font-weight: 700; }
+    .nav-user-role { font-size: 10.5px; color: var(--color-text-tertiary); }
+
+    /* ══ SIDEBAR ══ */
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.18); z-index: 150; backdrop-filter: blur(2px); }
+    .sidebar-open .sidebar-overlay { display: block; }
+    .sidebar { position: fixed; top: var(--nav-h); right: 0; width: var(--sidebar-w); height: calc(100vh - var(--nav-h)); background: var(--color-background-tertiary); border-left: 0.5px solid var(--color-border-tertiary); display: flex; flex-direction: column; z-index: 160; transform: translateX(100%); transition: transform 0.28s cubic-bezier(.22,.61,.36,1); }
+    .sidebar-open .sidebar { transform: translateX(0); }
+    .sidebar-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: var(--color-text-tertiary); text-transform: uppercase; padding: 18px 18px 6px; }
+    .sidebar-nav { padding: 8px 10px; flex: 1; overflow-y: auto; }
+    .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--radius-md); cursor: pointer; transition: background 0.15s; color: var(--color-text-secondary); font-size: 13.5px; font-weight: 600; border: none; background: none; width: 100%; text-align: right; font-family: var(--font-sans); }
+    .sidebar-item:hover { background: var(--color-background-primary); color: var(--color-text-primary); }
+    .sidebar-item.active { background: var(--accent-light); color: var(--accent-dark); }
+    .sidebar-item.active .si-icon { background: rgba(29,158,117,0.15); color: var(--accent); }
+    .si-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--color-background-primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sidebar-item:hover .si-icon { background: var(--color-background-secondary); }
+    .sidebar-divider { height: 0.5px; background: var(--color-border-tertiary); margin: 8px 18px; }
+    .sidebar-footer { padding: 12px 10px; border-top: 0.5px solid var(--color-border-tertiary); }
+    .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-md); }
+    .sidebar-user-name { font-size: 13px; font-weight: 700; }
+    .sidebar-user-email { font-size: 11px; color: var(--color-text-tertiary); }
+
+    /* ══ MAIN ══ */
+    .main-wrapper { margin-top: var(--nav-h); min-height: calc(100vh - var(--nav-h)); }
+    .container { max-width: 820px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+    /* ══ PAGE HEADER ══ */
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 1.6rem; }
+    .page-title { font-size: 23px; font-weight: 800; }
+    .page-sub { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
+    .badge-ocr { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 99px; background: var(--color-background-info); color: var(--color-text-info); flex-shrink: 0; }
+
+    /* ══ INFO CHIPS ══ */
+    .info-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .info-chip { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 99px; background: var(--color-background-tertiary); border: 0.5px solid var(--color-border-tertiary); font-size: 11.5px; font-weight: 600; color: var(--color-text-secondary); }
+    .info-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+    /* ══ UPLOAD CARD ══ */
+    .upload-card { background: var(--color-background-tertiary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--radius-xl); overflow: hidden; margin-bottom: 1.2rem; }
+    .upload-zone { border: 1.5px dashed var(--color-border-secondary); border-radius: var(--radius-lg); margin: 1.5rem; padding: 2.2rem 2rem; text-align: center; cursor: pointer; background: var(--color-background-primary); transition: background 0.2s, border-color 0.2s; }
+    .upload-zone:hover { background: var(--color-background-secondary); border-color: var(--accent); }
+    .upload-zone.dragover { background: var(--color-background-info); border-color: #185fa5; }
+    .upload-zone.has-file { background: var(--accent-light); border-color: var(--accent); border-style: solid; }
+    .upload-icon-wrap { width: 52px; height: 52px; border-radius: var(--radius-lg); background: var(--color-background-secondary); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 24px; transition: background 0.2s; }
+    .upload-zone.has-file .upload-icon-wrap { background: rgba(29,158,117,0.12); }
+    .upload-zone-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .upload-zone-sub { font-size: 13px; color: var(--color-text-tertiary); }
+    .upload-zone-sub strong { color: var(--color-text-info); font-weight: 700; }
+    .file-name-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--accent-dark); background: rgba(29,158,117,0.12); padding: 4px 12px; border-radius: 99px; margin-top: 10px; border: 0.5px solid rgba(29,158,117,0.25); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ══ OPTIONS ══ */
+    .options-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 0 1.5rem 1.5rem; }
+    .option-chip { display: flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 99px; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); font-size: 12.5px; font-weight: 600; color: var(--color-text-secondary); cursor: pointer; transition: all 0.15s; user-select: none; }
+    .option-chip.active { background: var(--accent-light); color: var(--accent-dark); border-color: rgba(29,158,117,0.35); }
+    .option-chip .chip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-border-secondary); transition: background 0.15s; }
+    .option-chip.active .chip-dot { background: var(--accent); }
+    .options-divider { width: 0.5px; height: 20px; background: var(--color-border-secondary); }
+    .options-label { font-size: 12px; font-weight: 700; color: var(--color-text-tertiary); }
+
+    /* ══ ACTION BUTTON ══ */
+    .btn-ocr-wrap { padding: 0 1.5rem 1.5rem; }
+    .btn-ocr { width: 100%; padding: 15px; font-family: var(--font-sans); font-size: 15px; font-weight: 800; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; transition: background 0.2s, transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-ocr:hover { background: var(--accent-dark); }
+    .btn-ocr:active { transform: scale(0.99); }
+    .btn-ocr:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ══ ERROR ══ */
+    .error-banner { display: none; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--radius-md); background: var(--color-background-danger); border: 0.5px solid rgba(163,45,45,0.2); color: var(--color-text-danger); font-size: 13px; font-weight: 600; margin-bottom: 1rem; }
+    .error-banner.visible { display: flex; }
+
+    /* ══ RESULT CARD ══ */
+    .result-card { background: var(--color-background-tertiary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--radius-xl); overflow: hidden; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease; }
+    .result-card.visible { opacity: 1; transform: translateY(0); }
+    .result-header { padding: 1.1rem 1.5rem; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .result-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--accent-light); display: flex; align-items: center; justify-content: center; color: var(--accent); flex-shrink: 0; }
+    .result-title { font-size: 14px; font-weight: 800; flex: 1; }
+    .result-meta { font-size: 11.5px; color: var(--color-text-tertiary); }
+    .result-stats { display: flex; border-bottom: 0.5px solid var(--color-border-tertiary); }
+    .stat-item { flex: 1; padding: 1rem 1.2rem; text-align: center; border-left: 0.5px solid var(--color-border-tertiary); }
+    .stat-item:last-child { border-left: none; }
+    .stat-value { font-size: 22px; font-weight: 800; }
+    .stat-label { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; font-weight: 600; }
+    .stat-item.green .stat-value { color: var(--accent); }
+    .stat-item.blue  .stat-value { color: var(--color-text-info); }
+    .stat-item.amber .stat-value { color: var(--color-text-warning); }
+    .result-note { margin: 0 1.5rem 0; padding: 10px 14px; background: var(--color-background-success); border-radius: var(--radius-md); border-right: 3px solid var(--accent); font-size: 12.5px; color: var(--color-text-success); display: flex; align-items: center; gap: 8px; }
+    .result-actions { padding: 1.2rem 1.5rem; display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-download { display: flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-md); font-family: var(--font-sans); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; border: none; }
+    .btn-download.primary { background: var(--accent); color: #fff; }
+    .btn-download.primary:hover { background: var(--accent-dark); }
+    .btn-download.secondary { background: var(--color-background-primary); color: var(--color-text-secondary); border: 0.5px solid var(--color-border-secondary); }
+    .btn-download.secondary:hover { background: var(--color-background-secondary); }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="pdf-overlay" id="pdfOverlay">
+  <div class="pdf-modal">
+    <div class="pdf-spinner"></div>
+    <div class="pdf-modal-title">جاري تحويل الـ PDF</div>
+    <div class="pdf-modal-sub" id="pdfModalSub">يتم تجهيز الملف...</div>
+    <div class="pdf-modal-pages" id="pdfModalPages"></div>
+    <div class="pdf-progress">
+      <div class="pdf-progress-bar" id="pdfProgressBar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-section-label">القائمة الرئيسية</div>
+  <nav class="sidebar-nav">
+    <a href="cgc-dashboard.html" style="text-decoration: none;">
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        لوحة الضمان
+      </button>
+    </a>
+    <a href="cgc-queries.html" style="text-decoration: none;">
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        طلبات الضمان
+      </button>
+    </a>
+        <a href="upload_Inq.html" style="text-decoration: none;">
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        رفع ملف ائتماني
+      </button>
+    </a>
+    <div class="sidebar-divider"></div>
+
+    <a href="ocr_page.html" style="text-decoration: none;">
+      <button class="sidebar-item avtive" onclick="navigate(this)">
+        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        البحث في مستند
+      </button>
+    </a>
+    <a href="inquiry_extraction.html" style="text-decoration: none;">
+
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+        استخراج بيانات الاستعلام
+      </button>
+    </a>
+
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="avatar">م أ</div>
+      <div>
+        <div class="sidebar-user-name">محمد أحمد</div>
+        <div class="sidebar-user-email">m.ahmed@company.com</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <button class="nav-sidebar-toggle" onclick="toggleSidebar()">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="nav-brand">Trusted<span>.ai</span></div>
+  <div class="nav-divider"></div>
+  <div class="nav-breadcrumb">
+    <span>الرئيسية</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    <span class="crumb-active">OCR – تحويل PDF</span>
+  </div>
+  <div class="nav-spacer"></div>
+  <button class="nav-icon-btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+  </button>
+  <div class="nav-user">
+    <div class="avatar">م أ</div>
+    <div>
+      <div class="nav-user-name">محمد أحمد</div>
+      <div class="nav-user-role">محلل ائتماني</div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main-wrapper">
+  <div class="container">
+
+    <div class="page-header">
+      <div>
+        <div class="page-title">تحويل PDF إلى Searchable PDF</div>
+        <div class="page-sub">ارفع ملف PDF ممسوح ضوئياً وسيتم تحويله لملف قابل للبحث والنسخ بدون سيرفر</div>
+      </div>
+      <div class="badge-ocr">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+        Tesseract · ara + eng
+      </div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-chip"><span class="dot"></span>يعمل بالكامل في المتصفح</div>
+      <div class="info-chip"><span class="dot"></span>عربي + إنجليزي</div>
+      <div class="info-chip"><span class="dot"></span>Searchable PDF ناتج</div>
+      <div class="info-chip"><span class="dot"></span>مفيش رفع لأي سيرفر</div>
+    </div>
+
+    <!-- UPLOAD CARD -->
+    <div class="upload-card">
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon-wrap" id="uploadIconWrap">📄</div>
+        <div class="upload-zone-title" id="uploadTitle">اسحب ملف PDF هنا</div>
+        <div class="upload-zone-sub" id="uploadSub">أو <strong>اضغط لاختيار الملف</strong> من جهازك</div>
+        <div id="fileNamePill" class="hidden"></div>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf" style="display:none" onchange="handleFile(this.files)">
+
+      <!-- OPTIONS -->
+      <div class="options-row">
+        <span class="options-label">اللغة:</span>
+        <div class="option-chip active" id="chip-ara" onclick="toggleLang('ara')">
+          <span class="chip-dot"></span> عربي
+        </div>
+        <div class="option-chip active" id="chip-eng" onclick="toggleLang('eng')">
+          <span class="chip-dot"></span> English
+        </div>
+        <div class="options-divider"></div>
+        <span class="options-label">الجودة:</span>
+        <div class="option-chip active" id="chip-2" onclick="setScale(2, this)">
+          <span class="chip-dot"></span> عالية ×2
+        </div>
+        <div class="option-chip" id="chip-15" onclick="setScale(1.5, this)">
+          <span class="chip-dot"></span> متوسطة ×1.5
+        </div>
+        <div class="option-chip" id="chip-1" onclick="setScale(1, this)">
+          <span class="chip-dot"></span> سريعة ×1
+        </div>
+      </div>
+
+      <div class="btn-ocr-wrap">
+        <button class="btn-ocr" id="ocrBtn" onclick="doOCR()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+          تحويل إلى Searchable PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- ERROR -->
+    <div class="error-banner" id="errorBanner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="errorText">حصل خطأ، حاول تاني</span>
+    </div>
+
+    <!-- RESULT -->
+    <div class="result-card" id="resultCard">
+      <div class="result-header">
+        <div class="result-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div class="result-title">تم التحويل بنجاح ✓</div>
+        <div class="result-meta" id="resultMeta">—</div>
+      </div>
+      <div class="result-stats">
+        <div class="stat-item green">
+          <div class="stat-value" id="statPages">—</div>
+          <div class="stat-label">عدد الصفحات</div>
+        </div>
+        <div class="stat-item blue">
+          <div class="stat-value" id="statSize">—</div>
+          <div class="stat-label">حجم الملف</div>
+        </div>
+        <div class="stat-item amber">
+          <div class="stat-value" id="statTime">—</div>
+          <div class="stat-label">وقت المعالجة</div>
+        </div>
+      </div>
+      <div class="result-note" style="margin-top:1rem;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        الملف الجديد قابل للبحث والنسخ بالعربية والإنجليزية — تم المعالجة محلياً في متصفحك
+      </div>
+      <div class="result-actions">
+        <button class="btn-download primary" id="btnDownload">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          تحميل الـ Searchable PDF
+        </button>
+        <button class="btn-download secondary" onclick="resetForm()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.7"/></svg>
+          تحويل ملف جديد
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  requestAnimationFrame(() => document.body.classList.add('ready'));
+  function toggleSidebar() { document.body.classList.toggle('sidebar-open'); }
+  function closeSidebar()  { document.body.classList.remove('sidebar-open'); }
+  function navigate(el) {
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active'); closeSidebar();
+  }
+
+  /* ── state ── */
+  let selectedFile = null;
+  let langs        = { ara: true, eng: true };
+  let selectedScale = 2;
+  let downloadUrl  = null;
+  let startTime    = null;
+
+  /* ── drag & drop ── */
+  const uploadZone = document.getElementById('uploadZone');
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); handleFile(e.dataTransfer.files); });
+
+  function handleFile(files) {
+    if (!files || !files.length) return;
+    const file = files[0];
+    if (!file.name.toLowerCase().endsWith('.pdf')) { showError('الملف لازم يكون PDF فقط'); return; }
+    selectedFile = file;
+    uploadZone.classList.add('has-file');
+    document.getElementById('uploadIconWrap').textContent = '✅';
+    document.getElementById('uploadTitle').textContent = 'تم اختيار الملف';
+    document.getElementById('uploadSub').innerHTML = `<span style="font-size:11px;color:var(--color-text-tertiary);">${(file.size/1024/1024).toFixed(2)} MB</span>`;
+    const pill = document.getElementById('fileNamePill');
+    pill.textContent = file.name;
+    pill.className = 'file-name-pill';
+    hideError();
+  }
+
+  function toggleLang(lang) {
+    langs[lang] = !langs[lang];
+    document.getElementById(`chip-${lang}`).classList.toggle('active', langs[lang]);
+  }
+
+  function setScale(scale, el) {
+    selectedScale = scale;
+    document.querySelectorAll('.option-chip[id^="chip-"]:not([id="chip-ara"]):not([id="chip-eng"])').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  /* ── overlay helpers ── */
+  function setModalSub(text) {
+    const el = document.getElementById('pdfModalSub');
+    el.style.opacity = '0';
+    setTimeout(() => { el.textContent = text; el.style.opacity = '1'; }, 180);
+  }
+  function setModalPages(cur, total) {
+    document.getElementById('pdfModalPages').textContent = total ? `صفحة ${cur} من ${total}` : '';
+  }
+  function setProgress(pct) {
+    document.getElementById('pdfProgressBar').style.width = Math.min(pct, 100) + '%';
+  }
+
+  /* ── script loader ── */
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = src; s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  /* ══ MAIN OCR — 100% in-browser ══════════════════════════════════ */
+  async function doOCR() {
+    if (!selectedFile)          { showError('اختار ملف PDF الأول'); return; }
+    if (!langs.ara && !langs.eng) { showError('اختار لغة واحدة على الأقل'); return; }
+
+    const btn = document.getElementById('ocrBtn');
+    btn.disabled = true;
+    hideError();
+    document.getElementById('resultCard').classList.remove('visible');
+    startTime = Date.now();
+
+    // show overlay
+    document.getElementById('pdfOverlay').classList.add('visible');
+    setModalSub('يتم تحميل مكتبات الـ OCR...');
+    setModalPages('', '');
+    setProgress(0);
+
+    try {
+
+      // ── 1. load libs ──────────────────────────────────────────────
+      await loadScript('pdf.min.js');
+      await loadScript('pdf-lib.min.js');
+      await loadScript('tesseract.min.js');
+      await loadScript('fontkit.umd.min.js');
+
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.min.js';
+      setProgress(8);
+
+      // ── 2. open PDF ───────────────────────────────────────────────
+      setModalSub('يتم قراءة الملف...');
+      const pdfData    = await selectedFile.arrayBuffer();
+      const pdf        = await pdfjsLib.getDocument({ data: pdfData }).promise;
+      const totalPages = pdf.numPages;
+      setProgress(12);
+
+      // ── 3. prepare output PDF + font ─────────────────────────────
+      setModalSub('جاري تجهيز المستند الجديد...');
+      const newPdf = await PDFLib.PDFDocument.create();
+      newPdf.registerFontkit(fontkit);
+
+      const fontBytes  = await fetch('Tajawal-Regular.ttf').then(r => r.arrayBuffer());
+
+      const arabicFont = await newPdf.embedFont(fontBytes);
+      setProgress(18);
+
+      // ── 4. create Tesseract worker ────────────────────────────────
+      setModalSub('تهيئة محرك Tesseract...');
+      const langStr = [langs.ara ? 'ara-Amiri' : '', langs.eng ? 'eng' : ''].filter(Boolean).join('+');
+
+      const worker = await Tesseract.createWorker(langStr, 1, {
+            workerPath : 'worker.min.js',
+            corePath   : 'tesseract-core-simd-lstm.wasm.js',
+            langPath   : 'path/',
+            logger     : m => console.log(m)
+          });
+      setProgress(25);
+
+      // ── 5. process pages ──────────────────────────────────────────
+      const canvas  = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+
+      for (let i = 1; i <= totalPages; i++) {
+        setModalSub(`Tesseract يعالج الصفحة ${i}...`);
+        setModalPages(i, totalPages);
+
+        const page     = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: selectedScale });
+        canvas.width   = viewport.width;
+        canvas.height  = viewport.height;
+
+        await page.render({ canvasContext: context, viewport }).promise;
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+        // OCR
+        const result = await worker.recognize(imgData);
+        const { words } = result.data;
+
+        // add page with image + invisible text layer
+        const pagePdf  = newPdf.addPage([viewport.width, viewport.height]);
+        const jpgImage = await newPdf.embedJpg(imgData);
+        pagePdf.drawImage(jpgImage, { x: 0, y: 0, width: viewport.width, height: viewport.height });
+
+        for (const w of words) {
+          const x = w.bbox.x0;
+          const y = viewport.height - w.bbox.y1;
+          pagePdf.drawText(w.text, {
+            x, y,
+            size   : 10,
+            font   : arabicFont,
+            color  : PDFLib.rgb(0, 0, 0),
+            opacity: 0   // invisible — for search only
+          });
+        }
+
+        page.cleanup();
+        // progress 25 → 92 across pages
+        setProgress(25 + Math.round((i / totalPages) * 67));
+      }
+
+      // ── 6. finalize ───────────────────────────────────────────────
+      setModalSub('يتم حفظ الملف النهائي...');
+      await worker.terminate();
+
+      const bytes     = await newPdf.save();
+      const finalBlob = new Blob([bytes], { type: 'application/pdf' });
+      const elapsed   = ((Date.now() - startTime) / 1000).toFixed(1);
+
+      if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+      downloadUrl = URL.createObjectURL(finalBlob);
+
+      setProgress(100);
+      setModalSub('تم التحويل بنجاح ✓');
+      setModalPages('', '');
+
+      setTimeout(() => {
+        document.getElementById('pdfOverlay').classList.remove('visible');
+        showResult(finalBlob, elapsed, totalPages);
+      }, 900);
+
+    } catch (err) {
+      console.error(err);
+      document.getElementById('pdfOverlay').classList.remove('visible');
+      showError('حصل خطأ: ' + (err.message || 'تأكد من الملف وحاول تاني'));
+    }
+
+    btn.disabled = false;
+  }
+
+  /* ── show result ── */
+  function showResult(blob, elapsed, totalPages) {
+    const origName = selectedFile.name.replace(/\.pdf$/i, '');
+    const newName  = `${origName}_searchable.pdf`;
+    const sizeMB   = (blob.size / 1024 / 1024).toFixed(2);
+
+    document.getElementById('resultMeta').textContent  = newName;
+    document.getElementById('statPages').textContent   = totalPages;
+    document.getElementById('statSize').textContent    = sizeMB + ' MB';
+    document.getElementById('statTime').textContent    = elapsed + 'ث';
+
+    document.getElementById('btnDownload').onclick = () => {
+      const a = document.createElement('a');
+      a.href = downloadUrl; a.download = newName; a.click();
+    };
+
+    const card = document.getElementById('resultCard');
+    card.classList.add('visible');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /* ── helpers ── */
+  function showError(msg) {
+    const b = document.getElementById('errorBanner');
+    document.getElementById('errorText').textContent = msg;
+    b.classList.add('visible');
+  }
+  function hideError() { document.getElementById('errorBanner').classList.remove('visible'); }
+
+  function resetForm() {
+    selectedFile = null;
+    document.getElementById('fileInput').value = '';
+    uploadZone.classList.remove('has-file');
+    document.getElementById('uploadIconWrap').textContent = '📄';
+    document.getElementById('uploadTitle').textContent = 'اسحب ملف PDF هنا';
+    document.getElementById('uploadSub').innerHTML = 'أو <strong>اضغط لاختيار الملف</strong> من جهازك';
+    document.getElementById('fileNamePill').className = 'hidden';
+    document.getElementById('resultCard').classList.remove('visible');
+    if (downloadUrl) { URL.revokeObjectURL(downloadUrl); downloadUrl = null; }
+    hideError();
+  }
+</script>
+</body>
+</html>

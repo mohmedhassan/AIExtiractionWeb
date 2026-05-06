@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>استخراج بيانات الاستعلام – Trusted IT.ai</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-background-primary: #f7f7f7;
+      --color-background-secondary: #f0efeb;
+      --color-background-tertiary: #FFF;
+      --color-background-info: #e6f1fb;
+      --color-background-success: #e1f5ee;
+      --color-background-warning: #faeeda;
+      --color-background-danger: #fcebeb;
+      --color-text-primary: #1a1a18;
+      --color-text-secondary: #5f5e5a;
+      --color-text-tertiary: #888780;
+      --color-text-info: #185fa5;
+      --color-text-success: #0f6e56;
+      --color-text-warning: #854f0b;
+      --color-text-danger: #a32d2d;
+      --color-border-tertiary: rgba(26,26,24,0.1);
+      --color-border-secondary: rgba(26,26,24,0.18);
+      --color-border-primary: rgba(26,26,24,0.32);
+      --accent: #1D9E75;
+      --accent-dark: #0f6e56;
+      --accent-light: #e1f5ee;
+      --sidebar-w: 240px;
+      --nav-h: 60px;
+      --font-sans: 'Cairo', sans-serif;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 18px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--color-text-primary);
+      min-height: 100vh;
+      direction: rtl;
+      overflow-x: hidden;
+      background: var(--color-background-primary);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    body.ready { opacity: 1; }
+
+    /* ══════════════════════════════════════
+       LOADING OVERLAY
+    ══════════════════════════════════════ */
+    .pdf-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15, 25, 20, 0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .pdf-overlay.visible { opacity: 1; pointer-events: all; }
+
+    .pdf-modal {
+      background: var(--color-background-tertiary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.08);
+      padding: 2.5rem 2.8rem;
+      text-align: center; min-width: 300px; max-width: 380px;
+      transform: translateY(12px) scale(0.97);
+      transition: transform 0.35s cubic-bezier(.22,.61,.36,1);
+    }
+    .pdf-overlay.visible .pdf-modal { transform: translateY(0) scale(1); }
+
+    .pdf-spinner {
+      width: 52px; height: 52px;
+      margin: 0 auto 1.4rem; position: relative;
+    }
+    .pdf-spinner::before, .pdf-spinner::after {
+      content: ''; position: absolute; border-radius: 50%;
+    }
+    .pdf-spinner::before {
+      inset: 0;
+      border: 3px solid var(--accent-light);
+      border-top-color: var(--accent);
+      animation: spin 0.85s linear infinite;
+    }
+    .pdf-spinner::after {
+      inset: 12px;
+      background: var(--accent-light);
+      animation: pulse 0.85s ease-in-out infinite alternate;
+    }
+    @keyframes spin  { to { transform: rotate(360deg); } }
+    @keyframes pulse { from { transform: scale(0.7); opacity: 0.5; } to { transform: scale(1); opacity: 1; } }
+
+    .pdf-modal-title { font-size: 16px; font-weight: 800; color: var(--color-text-primary); margin-bottom: 8px; }
+    .pdf-modal-sub   { font-size: 13px; color: var(--color-text-tertiary); line-height: 1.6; min-height: 40px; transition: opacity 0.3s; }
+
+    .pdf-progress { margin-top: 1.4rem; height: 3px; border-radius: 99px; background: var(--color-background-secondary); overflow: hidden; }
+    .pdf-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #378ADD); border-radius: 99px; transition: width 0.4s ease; }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; top: 0; right: 0; left: 0;
+      height: var(--nav-h);
+      background: var(--color-background-tertiary);
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      display: flex; align-items: center;
+      padding: 0 1.25rem; gap: 0; z-index: 200;
+    }
+    .nav-sidebar-toggle {
+      width: 36px; height: 36px; border: none; background: none; cursor: pointer;
+      border-radius: var(--radius-sm);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4.5px;
+      transition: background 0.15s; flex-shrink: 0;
+    }
+    .nav-sidebar-toggle:hover { background: var(--color-background-primary); }
+    .nav-sidebar-toggle span {
+      display: block; width: 18px; height: 1.5px;
+      background: var(--color-text-secondary); border-radius: 2px;
+      transition: transform 0.25s, opacity 0.25s, width 0.25s;
+    }
+    .sidebar-open .nav-sidebar-toggle span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .sidebar-open .nav-sidebar-toggle span:nth-child(2) { opacity: 0; width: 0; }
+    .sidebar-open .nav-sidebar-toggle span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+    .nav-brand { font-size: 18px; font-weight: 900; color: var(--color-text-primary); letter-spacing: -0.5px; margin-right: 12px; flex-shrink: 0; }
+    .nav-brand span { color: var(--accent); }
+    .nav-divider { width: 0.5px; height: 22px; background: var(--color-border-secondary); margin: 0 14px; flex-shrink: 0; }
+    .nav-breadcrumb { font-size: 12.5px; color: var(--color-text-tertiary); display: flex; align-items: center; gap: 6px; }
+    .nav-breadcrumb .crumb-active { color: var(--color-text-secondary); font-weight: 600; }
+    .nav-spacer { flex: 1; }
+
+    .nav-icons { display: flex; align-items: center; gap: 2px; margin-right: 8px; }
+    .nav-icon-btn {
+      position: relative; width: 36px; height: 36px;
+      border: none; background: none; border-radius: var(--radius-sm); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--color-text-secondary); transition: background 0.15s, color 0.15s;
+    }
+    .nav-icon-btn:hover { background: var(--color-background-primary); color: var(--color-text-primary); }
+
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, #1D9E75, #378ADD);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: #fff; flex-shrink: 0; position: relative;
+    }
+    .avatar::after {
+      content: ''; position: absolute; bottom: 0; left: 0;
+      width: 9px; height: 9px; border-radius: 50%;
+      background: #22c55e; border: 1.5px solid var(--color-background-tertiary);
+    }
+    .nav-user { display: flex; align-items: center; gap: 9px; padding: 4px 10px 4px 4px; border-radius: 99px; cursor: pointer; transition: background 0.15s; border: 0.5px solid transparent; margin-right: 4px; }
+    .nav-user:hover { background: var(--color-background-primary); border-color: var(--color-border-tertiary); }
+    .nav-user-info { display: flex; flex-direction: column; }
+    .nav-user-name { font-size: 12.5px; font-weight: 700; color: var(--color-text-primary); line-height: 1.2; }
+    .nav-user-role { font-size: 10.5px; color: var(--color-text-tertiary); }
+
+    /* ── SIDEBAR ── */
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.18); z-index: 150; backdrop-filter: blur(2px); }
+    .sidebar-open .sidebar-overlay { display: block; }
+    .sidebar {
+      position: fixed; top: var(--nav-h); right: 0;
+      width: var(--sidebar-w); height: calc(100vh - var(--nav-h));
+      background: var(--color-background-tertiary);
+      border-left: 0.5px solid var(--color-border-tertiary);
+      display: flex; flex-direction: column;
+      z-index: 160; transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(.22,.61,.36,1); overflow: hidden;
+    }
+    .sidebar-open .sidebar { transform: translateX(0); }
+    .sidebar-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: var(--color-text-tertiary); text-transform: uppercase; padding: 18px 18px 6px; }
+    .sidebar-nav { padding: 8px 10px; flex: 1; overflow-y: auto; }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: var(--radius-md); cursor: pointer;
+      transition: background 0.15s; color: var(--color-text-secondary);
+      font-size: 13.5px; font-weight: 600;
+      border: none; background: none; width: 100%; text-align: right; font-family: var(--font-sans);
+    }
+    .sidebar-item:hover { background: var(--color-background-primary); color: var(--color-text-primary); }
+    .sidebar-item.active { background: var(--accent-light); color: var(--accent-dark); }
+    .sidebar-item.active .si-icon { background: rgba(29,158,117,0.15); color: var(--accent); }
+    .si-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--color-background-primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sidebar-item:hover .si-icon { background: var(--color-background-secondary); }
+    .sidebar-divider { height: 0.5px; background: var(--color-border-tertiary); margin: 8px 18px; }
+    .sidebar-footer { padding: 12px 10px; border-top: 0.5px solid var(--color-border-tertiary); }
+    .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-md); cursor: pointer; transition: background 0.15s; }
+    .sidebar-user:hover { background: var(--color-background-primary); }
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-name { font-size: 13px; font-weight: 700; }
+    .sidebar-user-email { font-size: 11px; color: var(--color-text-tertiary); }
+
+    /* ── MAIN ── */
+    .main-wrapper { margin-top: var(--nav-h); height: calc(100vh - var(--nav-h)); display: flex; flex-direction: column; }
+
+    /* ── UPLOAD SECTION ── */
+    .upload-section {
+      background: var(--color-background-tertiary);
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      padding: 1.2rem 1.5rem;
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    .upload-zone {
+      flex: 1; min-width: 280px;
+      border: 1.5px dashed var(--color-border-secondary);
+      border-radius: var(--radius-lg);
+      padding: 1.1rem 1.5rem;
+      text-align: center; cursor: pointer;
+      background: var(--color-background-primary);
+      transition: background 0.2s, border-color 0.2s;
+      display: flex; align-items: center; gap: 12px; justify-content: center;
+    }
+    .upload-zone:hover { background: var(--color-background-secondary); border-color: var(--accent); }
+    .upload-zone.dragover { background: var(--color-background-info); border-color: #185fa5; }
+    .upload-zone.has-file { background: var(--accent-light); border-color: var(--accent); border-style: solid; }
+    .upload-icon { font-size: 22px; flex-shrink: 0; }
+    .upload-text { text-align: right; }
+    .upload-label { font-size: 14px; font-weight: 700; color: var(--color-text-primary); }
+    .upload-label strong { color: var(--color-text-info); }
+    .upload-hint { font-size: 11.5px; color: var(--color-text-tertiary); margin-top: 2px; }
+    .file-name-tag {
+      font-size: 12px; font-weight: 600; color: var(--accent-dark);
+      background: var(--accent-light); padding: 3px 10px; border-radius: 99px;
+      border: 0.5px solid rgba(29,158,117,0.3); white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; max-width: 220px; display: inline-block;
+    }
+
+    .btn-extract {
+      padding: 0 2rem; height: 46px;
+      font-family: var(--font-sans); font-size: 14px; font-weight: 700;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-md); cursor: pointer;
+      transition: background 0.2s, transform 0.1s; white-space: nowrap;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .btn-extract:hover { background: var(--accent-dark); }
+    .btn-extract:active { transform: scale(0.98); }
+    .btn-extract:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── SPLIT LAYOUT ── */
+    .split-layout {
+      flex: 1; display: grid;
+      grid-template-columns: 1fr 1fr;
+      overflow: hidden;
+    }
+
+    /* LEFT: FORM FIELDS */
+    .fields-panel {
+      border-left: 0.5px solid var(--color-border-tertiary);
+      overflow-y: auto; padding: 1.5rem;
+      display: flex; flex-direction: column; gap: 1.4rem;
+    }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.2rem; }
+    .panel-title { font-size: 15px; font-weight: 800; }
+    .panel-badge {
+      font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px;
+      background: var(--accent-light); color: var(--accent-dark);
+    }
+
+    .field-group { display: flex; flex-direction: column; gap: 0.75rem; }
+    .group-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+      color: var(--color-text-tertiary); text-transform: uppercase;
+      padding-bottom: 0.5rem; border-bottom: 0.5px solid var(--color-border-tertiary);
+    }
+
+    .field-row { display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
+    .field-input {
+      width: 100%; padding: 8px 11px;
+      font-family: var(--font-sans); font-size: 13px;
+      color: var(--color-text-primary);
+      background: var(--color-background-primary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: var(--radius-sm);
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+      direction: rtl;
+    }
+    .field-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,158,117,0.1); }
+    .field-input.filled { background: var(--color-background-tertiary); border-color: var(--color-border-secondary); }
+
+    textarea.field-input { resize: vertical; min-height: 64px; }
+
+    .field-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* table for customers/suppliers */
+    .ref-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .ref-table th {
+      background: var(--color-background-secondary);
+      color: var(--color-text-tertiary); font-weight: 700;
+      padding: 7px 10px; text-align: right; font-size: 11px; letter-spacing: 0.04em;
+    }
+    .ref-table td { padding: 7px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); vertical-align: top; }
+    .ref-table tr:last-child td { border-bottom: none; }
+    .ref-table tr:hover td { background: var(--color-background-primary); }
+    .td-status {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 99px;
+      background: var(--color-background-warning); color: var(--color-text-warning);
+    }
+    .td-status.ok { background: var(--accent-light); color: var(--accent-dark); }
+
+    .btn-save {
+      width: 100%; padding: 12px; font-family: var(--font-sans); font-size: 14px; font-weight: 700;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-md); cursor: pointer;
+      transition: background 0.2s; margin-top: 0.5rem;
+    }
+    .btn-save:hover { background: var(--accent-dark); }
+
+    /* RIGHT: PDF PREVIEW */
+    .preview-panel {
+      background: var(--color-background-secondary);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .preview-toolbar {
+      background: var(--color-background-tertiary);
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      padding: 0.7rem 1.2rem;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .preview-toolbar-title { font-size: 13px; font-weight: 700; flex: 1; }
+    .preview-toolbar-hint { font-size: 11.5px; color: var(--color-text-tertiary); }
+
+    .preview-toolbar-btn {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px; font-family: var(--font-sans);
+      font-size: 12px; font-weight: 600; border-radius: var(--radius-sm);
+      cursor: pointer; border: 0.5px solid var(--color-border-secondary);
+      background: var(--color-background-tertiary); color: var(--color-text-secondary);
+      transition: background 0.15s;
+    }
+    .preview-toolbar-btn:hover { background: var(--color-background-primary); }
+
+    .pdf-frame-wrap {
+      flex: 1; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    }
+    #pdfFrame {
+      width: 100%; height: 100%;
+      border: none; display: none;
+    }
+    .pdf-empty-state {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; color: var(--color-text-tertiary); text-align: center; padding: 2rem;
+    }
+    .pdf-empty-icon { font-size: 48px; opacity: 0.35; }
+    .pdf-empty-title { font-size: 14px; font-weight: 700; color: var(--color-text-secondary); }
+    .pdf-empty-sub { font-size: 12px; line-height: 1.6; max-width: 220px; }
+
+    /* empty / placeholder state for fields */
+    .fields-empty {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; text-align: center; padding: 3rem 2rem;
+      color: var(--color-text-tertiary);
+    }
+    .fields-empty-icon { font-size: 42px; opacity: 0.3; }
+    .fields-empty-title { font-size: 14px; font-weight: 700; color: var(--color-text-secondary); }
+    .fields-empty-sub { font-size: 12px; line-height: 1.6; max-width: 240px; }
+
+    /* hidden */
+    .hidden { display: none !important; }
+
+    /* scrollbar */
+    .fields-panel::-webkit-scrollbar { width: 4px; }
+    .fields-panel::-webkit-scrollbar-track { background: transparent; }
+    .fields-panel::-webkit-scrollbar-thumb { background: var(--color-border-secondary); border-radius: 99px; }
+
+    @media (max-width: 768px) {
+      .split-layout { grid-template-columns: 1fr; }
+      .preview-panel { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="pdf-overlay" id="pdfOverlay">
+  <div class="pdf-modal">
+    <div class="pdf-spinner"></div>
+    <div class="pdf-modal-title">جاري استخراج البيانات</div>
+    <div class="pdf-modal-sub" id="pdfModalSub">يتم قراءة الملف...</div>
+    <div class="pdf-progress">
+      <div class="pdf-progress-bar" id="pdfProgressBar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-section-label">القائمة الرئيسية</div>
+  <nav class="sidebar-nav">
+    <a href="cgc-dashboard.html" style="text-decoration: none;">
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        لوحة الضمان
+      </button>
+    </a>
+    <a href="cgc-queries.html" style="text-decoration: none;">
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        طلبات الضمان
+      </button>
+    </a>
+        <a href="upload_Inq.html" style="text-decoration: none;">
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        رفع ملف ائتماني
+      </button>
+    </a>
+    <div class="sidebar-divider"></div>
+
+    <a href="ocr_page.html" style="text-decoration: none;">
+      <button class="sidebar-item" onclick="navigate(this)">
+        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        البحث في مستند
+      </button>
+    </a>
+    <a href="inquiry_extraction.html" style="text-decoration: none;">
+
+      <button class="sidebar-item active" onclick="navigate(this)">
+        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+        استخراج بيانات الاستعلام
+      </button>
+    </a>
+
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="avatar" id="sidebarAvatar">م أ</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name" id="sidebarUserName">محمد أحمد</div>
+        <div class="sidebar-user-email" id="sidebarUserEmail">m.ahmed@company.com</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <button class="nav-sidebar-toggle" onclick="toggleSidebar()">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="nav-brand">Trusted<span>.ai</span></div>
+  <div class="nav-divider"></div>
+  <div class="nav-breadcrumb">
+    <span>الرئيسية</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    <span class="crumb-active">استخراج الاستعلام</span>
+  </div>
+  <div class="nav-spacer"></div>
+  <div class="nav-icons">
+    <button class="nav-icon-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </button>
+  </div>
+  <div class="nav-user">
+    <div class="avatar" id="navAvatar">م أ</div>
+    <div class="nav-user-info">
+      <div class="nav-user-name" id="navUserName">محمد أحمد</div>
+      <div class="nav-user-role">محلل ائتماني</div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main-wrapper">
+
+  <!-- UPLOAD BAR -->
+  <div class="upload-section">
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">📄</div>
+      <div class="upload-text">
+        <div class="upload-label" id="uploadLabel">اسحب الملف هنا أو <strong>اختر من جهازك</strong></div>
+        <div class="upload-hint" id="uploadHint">PDF · حتى 20 MB</div>
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept=".pdf" style="display:none" onchange="handleFile(this.files)">
+    <button class="btn-extract" id="extractBtn" onclick="doExtract()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      استخراج البيانات
+    </button>
+  </div>
+
+  <!-- SPLIT VIEW -->
+  <div class="split-layout">
+
+    <!-- LEFT: FIELDS -->
+    <div class="fields-panel" id="fieldsPanel">
+
+      <!-- Empty state -->
+      <div class="fields-empty" id="fieldsEmpty">
+        <div class="fields-empty-icon">🗂️</div>
+        <div class="fields-empty-title">لم يتم الاستخراج بعد</div>
+        <div class="fields-empty-sub">ارفع ملف PDF واضغط "استخراج البيانات" لتعبئة الحقول تلقائياً</div>
+      </div>
+
+      <!-- Fields (hidden until extraction) -->
+      <div id="fieldsContent" class="hidden">
+        <div class="panel-header">
+          <div class="panel-title">بيانات الاستعلام</div>
+          <span class="panel-badge" id="fieldsBadge">—</span>
+        </div>
+
+        <!-- Company Info -->
+        <div class="field-group">
+          <div class="group-label">بيانات الشركة</div>
+          <div class="field-row">
+            <label class="field-label">اسم الشركة</label>
+            <input class="field-input" id="f_companyName" type="text">
+          </div>
+          <div class="field-row">
+            <label class="field-label">العنوان</label>
+            <textarea class="field-input" id="f_address" rows="2"></textarea>
+          </div>
+          <div class="field-grid-2">
+            <div class="field-row">
+              <label class="field-label">الرقم الضريبي</label>
+              <input class="field-input" id="f_taxNumber" type="text">
+            </div>
+            <div class="field-row">
+              <label class="field-label">السجل التجاري</label>
+              <input class="field-input" id="f_comReg" type="text">
+            </div>
+          </div>
+          <div class="field-row">
+            <label class="field-label">النشاط التجاري</label>
+            <textarea class="field-input" id="f_companySection" rows="2"></textarea>
+          </div>
+          <div class="field-grid-2">
+            <div class="field-row">
+              <label class="field-label">رأس المال المرخص</label>
+              <input class="field-input" id="f_capitalAuth" type="text">
+            </div>
+            <div class="field-row">
+              <label class="field-label">رأس المال المدفوع</label>
+              <input class="field-input" id="f_capitalPaid" type="text">
+            </div>
+          </div>
+          <div class="field-row">
+            <label class="field-label">عدد الموظفين</label>
+            <input class="field-input" id="f_employees" type="text">
+          </div>
+          <div class="field-row">
+            <label class="field-label">أرقام الهاتف</label>
+            <input class="field-input" id="f_phone" type="text">
+          </div>
+        </div>
+
+        <!-- Management -->
+        <div class="field-group">
+          <div class="group-label">بيانات الإدارة والتوقيع</div>
+          <div id="f_boardContainer"></div>
+        </div>
+
+        <!-- Customers -->
+        <div class="field-group">
+          <div class="group-label">العملاء المرجعيون</div>
+          <div style="overflow-x:auto; border-radius: var(--radius-md); border: 0.5px solid var(--color-border-tertiary);">
+            <table class="ref-table" id="f_customersTable">
+              <thead>
+                <tr>
+                  <th>اسم العميل</th>
+                  <th>رقم الهاتف</th>
+                  <th>الملاحظات</th>
+                </tr>
+              </thead>
+              <tbody id="f_customersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Suppliers -->
+        <div class="field-group">
+          <div class="group-label">الموردون المرجعيون</div>
+          <div style="overflow-x:auto; border-radius: var(--radius-md); border: 0.5px solid var(--color-border-tertiary);">
+            <table class="ref-table" id="f_suppliersTable">
+              <thead>
+                <tr>
+                  <th>اسم المورد</th>
+                  <th>رقم الهاتف</th>
+                  <th>الملاحظات</th>
+                </tr>
+              </thead>
+              <tbody id="f_suppliersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <button class="btn-save" onclick="saveData()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:inline;margin-left:6px;vertical-align:middle"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          حفظ البيانات
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT: PDF PREVIEW -->
+    <div class="preview-panel">
+      <div class="preview-toolbar">
+        <div class="preview-toolbar-title">معاينة الملف</div>
+        <span class="preview-toolbar-hint" id="previewFileName">لم يتم اختيار ملف</span>
+        <button class="preview-toolbar-btn" onclick="document.getElementById('fileInput').click()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          تغيير الملف
+        </button>
+      </div>
+      <div class="pdf-frame-wrap">
+        <div class="pdf-empty-state" id="pdfEmptyState">
+          <div class="pdf-empty-icon">📋</div>
+          <div class="pdf-empty-title">لا يوجد ملف محدد</div>
+          <div class="pdf-empty-sub">ارفع ملف PDF وسيظهر هنا للمراجعة أثناء تعديل البيانات</div>
+        </div>
+        <iframe id="pdfFrame"></iframe>
+      </div>
+    </div>
+
+  </div><!-- end split -->
+</div><!-- end main -->
+
+<script>
+  /* ── INIT ── */
+  requestAnimationFrame(() => document.body.classList.add('ready'));
+
+  function toggleSidebar() { document.body.classList.toggle('sidebar-open'); }
+  function closeSidebar()  { document.body.classList.remove('sidebar-open'); }
+  function navigate(el) {
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active'); closeSidebar();
+  }
+
+  /* ── FILE HANDLING ── */
+  let selectedFile = null;
+  let objectURL    = null;
+
+  const uploadZone = document.getElementById('uploadZone');
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); handleFile(e.dataTransfer.files); });
+
+  function handleFile(files) {
+    if (!files || !files.length) return;
+    selectedFile = files[0];
+
+    // Update upload zone
+    uploadZone.classList.add('has-file');
+    document.getElementById('uploadLabel').innerHTML = `<strong style="color:var(--accent-dark)">✓ تم اختيار الملف</strong>`;
+    document.getElementById('uploadHint').innerHTML = `<span class="file-name-tag">${selectedFile.name}</span>`;
+
+    // Show PDF preview
+    if (objectURL) URL.revokeObjectURL(objectURL);
+    objectURL = URL.createObjectURL(selectedFile);
+    document.getElementById('pdfFrame').src = objectURL;
+    document.getElementById('pdfFrame').style.display = 'block';
+    document.getElementById('pdfEmptyState').classList.add('hidden');
+    document.getElementById('previewFileName').textContent = selectedFile.name;
+  }
+
+  /* ── LOADING ── */
+  const loadingSteps = [
+    'يتم قراءة محتوى الملف...',
+    'جاري التعرف على البيانات بالذكاء الاصطناعي...',
+    'استخراج بيانات الشركة والإدارة...',
+    'معالجة بيانات العملاء والموردين...',
+    'مراجعة النتائج النهائية...',
+  ];
+  let loadingInterval = null, progressInterval = null;
+
+  function showLoading() {
+    const overlay = document.getElementById('pdfOverlay');
+    const subText = document.getElementById('pdfModalSub');
+    const progBar = document.getElementById('pdfProgressBar');
+    subText.textContent = loadingSteps[0];
+    progBar.style.width = '0%';
+    overlay.classList.add('visible');
+
+    let step = 0, progress = 0;
+    loadingInterval = setInterval(() => {
+      step = (step + 1) % loadingSteps.length;
+      subText.style.opacity = '0';
+      setTimeout(() => { subText.textContent = loadingSteps[step]; subText.style.opacity = '1'; }, 200);
+    }, 1800);
+    progressInterval = setInterval(() => {
+      if (progress < 82) { progress += Math.random() * 3.5; progBar.style.width = Math.min(progress, 82) + '%'; }
+    }, 280);
+  }
+
+  function hideLoading(success = true) {
+    const overlay = document.getElementById('pdfOverlay');
+    const subText = document.getElementById('pdfModalSub');
+    const progBar = document.getElementById('pdfProgressBar');
+    clearInterval(loadingInterval); clearInterval(progressInterval);
+
+    if (success) {
+      progBar.style.width = '100%';
+      subText.style.opacity = '0';
+      setTimeout(() => { subText.textContent = 'تم الاستخراج بنجاح ✓'; subText.style.opacity = '1'; }, 200);
+      setTimeout(() => overlay.classList.remove('visible'), 900);
+    } else {
+      overlay.classList.remove('visible');
+    }
+  }
+
+  /* ── EXTRACT ── */
+  async function doExtract() {
+    if (!selectedFile) { alert('❗ اختار ملف PDF أولاً'); return; }
+
+    const btn = document.getElementById('extractBtn');
+    btn.disabled = true;
+    showLoading();
+
+    try {
+      // ── Real API call to Node.js backend ──
+      const API_URL = "http://localhost:3000/Extract_PDF"; // غير الـ URL لو الـ server على port تاني
+
+      const formData = new FormData();
+      formData.append("files", selectedFile);
+
+      const res = await fetch(API_URL, { method: "POST", body: formData });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      hideLoading(true);
+      setTimeout(() => renderFields(data), 900);
+
+    } catch (err) {
+      console.error(err);
+      hideLoading(false);
+      alert('❌ حصل خطأ في الاتصال بالـ API');
+    }
+
+    btn.disabled = false;
+  }
+
+  /* ── RENDER FIELDS ── */
+  function renderFields(d) {
+    // Show fields, hide empty state
+    document.getElementById('fieldsEmpty').classList.add('hidden');
+    document.getElementById('fieldsContent').classList.remove('hidden');
+
+    // Basic fields
+    setValue('f_companyName', d.companyName);
+    setValue('f_address',     d.address);
+    setValue('f_taxNumber',   d.taxNumber);
+    setValue('f_comReg',      d.ComReg);
+    setValue('f_companySection', d.companySection);
+    setValue('f_capitalAuth', d.capitalAuth ? Number(d.capitalAuth).toLocaleString('ar-EG') + ' جنيه' : '');
+    setValue('f_capitalPaid', d.capitalPaid ? Number(d.capitalPaid).toLocaleString('ar-EG') + ' جنيه' : '');
+    setValue('f_employees',   d.employees);
+    setValue('f_phone',       Array.isArray(d.phone) ? d.phone.join(' | ') : d.phone || '');
+
+    // Board members
+    const boardContainer = document.getElementById('f_boardContainer');
+    boardContainer.innerHTML = '';
+    const names = d.name || [];
+    const roles = d.role || [];
+    names.forEach((name, i) => {
+      boardContainer.innerHTML += `
+        <div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1D9E75,#378ADD);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex-shrink:0;">${name.charAt(0)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:700;">${name}</div>
+            <div style="font-size:11.5px;color:var(--color-text-tertiary);margin-top:2px;">${roles[i] || ''}</div>
+          </div>
+          <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--accent-light);color:var(--accent-dark);flex-shrink:0;">متضامن</span>
+        </div>`;
+    });
+
+    // Customers table
+    const custBody = document.getElementById('f_customersBody');
+    custBody.innerHTML = '';
+    (d.customerName || []).forEach((name, i) => {
+      const disc = (d.customerDisc || [])[i] || '';
+      const phone = (d.customerPhone || [])[i] || '';
+      const isContact = disc.includes('تم الاتصال') && !disc.includes('ولم يتم الرد') && !disc.includes('ترك');
+      custBody.innerHTML += `
+        <tr>
+          <td style="font-weight:600;">${name}</td>
+          <td style="direction:ltr;text-align:right;font-size:11.5px;">${phone}</td>
+          <td><span class="td-status ${isContact ? 'ok' : ''}">${disc.length > 35 ? disc.substring(0,35)+'...' : disc}</span></td>
+        </tr>`;
+    });
+
+    // Suppliers table
+    const suppBody = document.getElementById('f_suppliersBody');
+    suppBody.innerHTML = '';
+    (d.supplierName || []).forEach((name, i) => {
+      const disc = (d.supplierDisc || [])[i] || '';
+      const phone = (d.supplierPhone || [])[i] || '';
+      suppBody.innerHTML += `
+        <tr>
+          <td style="font-weight:600;">${name}</td>
+          <td style="direction:ltr;text-align:right;font-size:11.5px;">${phone}</td>
+          <td><span class="td-status">${disc.length > 35 ? disc.substring(0,35)+'...' : disc}</span></td>
+        </tr>`;
+    });
+
+    // Badge count
+    const count = (d.customerName?.length || 0) + (d.supplierName?.length || 0) + (d.name?.length || 0);
+    document.getElementById('fieldsBadge').textContent = count + ' سجل';
+
+    // Animate fields in
+    const fieldsContent = document.getElementById('fieldsContent');
+    fieldsContent.style.opacity = '0';
+    fieldsContent.style.transform = 'translateY(10px)';
+    fieldsContent.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    requestAnimationFrame(() => {
+      fieldsContent.style.opacity = '1';
+      fieldsContent.style.transform = 'translateY(0)';
+    });
+  }
+
+  function setValue(id, val) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = val || '';
+    if (val) el.classList.add('filled');
+  }
+
+  function saveData() {
+    const saved = {
+      companyName:    document.getElementById('f_companyName').value,
+      address:        document.getElementById('f_address').value,
+      taxNumber:      document.getElementById('f_taxNumber').value,
+      ComReg:         document.getElementById('f_comReg').value,
+      companySection: document.getElementById('f_companySection').value,
+      capitalAuth:    document.getElementById('f_capitalAuth').value,
+      capitalPaid:    document.getElementById('f_capitalPaid').value,
+      employees:      document.getElementById('f_employees').value,
+      phone:          document.getElementById('f_phone').value,
+    };
+    console.log('Saved:', saved);
+    const btn = document.querySelector('.btn-save');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ تم الحفظ بنجاح';
+    btn.style.background = 'var(--accent-dark)';
+    setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; }, 2000);
+  }
+</script>
+</body>
+</html>
