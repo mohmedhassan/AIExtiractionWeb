@@ -717,47 +717,86 @@
     }
 
     async function analyze() {
-      if (!selectedFiles) {
-        alert("❗ اختار ملف الأول");
-        return;
-      }
+  if (!selectedFiles) {
+    alert("❗ اختار ملف الأول");
+    return;
+  }
 
-      const formData = new FormData();
-      for (let i = 0; i < selectedFiles.length; i++) {
-        formData.append("files", selectedFiles[i]);
-      }
+  const formData = new FormData();
 
-      const btn = document.getElementById('analyzeBtn');
-      btn.disabled = true;
+  for (let i = 0; i < selectedFiles.length; i++) {
+    formData.append("files", selectedFiles[i]);
+  }
 
-      // ── Show loading overlay ──
-      showLoading();
+  const btn = document.getElementById("analyzeBtn");
+  btn.disabled = true;
 
-      try {
-        const res = await fetch("https://trustedai-hm49jq9v.b4a.run/analyze", { method: "POST", body: formData });
-        const data = await res.json();
-        currentData = data;
+  showLoading();
 
-        // ── Hide overlay (success) then render ──
-        hideLoading(true);
+  try {
+    const controller = new AbortController();
 
-        setTimeout(() => {
-          document.getElementById('dashboard').classList.remove('hidden');
-          renderWaterfall(data);
-          renderBalance(data);
-          renderBar(data);
-          renderRatios(data);
-        }, 800); // small delay so "تم التحليل بنجاح" is readable
+    const timer = setTimeout(() => {
+      controller.abort();
+    }, 90000); // 90 seconds timeout
 
-      } catch (err) {
-        console.error(err);
-        hideLoading(false);
-        alert("❌ حصل خطأ في الاتصال بالـ API");
-      }
+    const res = await fetch("https://trustedai-hm49jq9v.b4a.run/analyze", {
+      method: "POST",
+      body: formData,
+      signal: controller.signal
+    });
 
-      btn.disabled = false;
-      btn.textContent = "إعادة التحليل ←";
+    clearTimeout(timer);
+
+    const raw = await res.text();
+
+    console.log("Analyze HTTP Status:", res.status);
+    console.log("Analyze Raw Response:", raw);
+
+    if (!res.ok) {
+      throw new Error("API Error " + res.status + ": " + raw);
     }
+
+    let data;
+
+    try {
+      data = JSON.parse(raw);
+    } catch (jsonError) {
+      throw new Error(
+        "Response is not valid JSON. First response content: " +
+        raw.substring(0, 300)
+      );
+    }
+
+    currentData = data;
+
+    hideLoading(true);
+
+    setTimeout(() => {
+      document.getElementById("dashboard").classList.remove("hidden");
+
+      renderWaterfall(data);
+      renderBalance(data);
+      renderBar(data);
+      renderRatios(data);
+    }, 800);
+
+  } catch (err) {
+    console.error("Analyze Error:", err);
+
+    hideLoading(false);
+
+    if (err.name === "AbortError") {
+      alert("❌ الطلب أخد وقت طويل ولم يرجع نتيجة. غالباً في Timeout من السيرفر أو Back4App.");
+    } else {
+      alert("❌ حصل خطأ في الاتصال بالـ API:\n" + err.message);
+    }
+
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "إعادة التحليل ←";
+  }
+}
 
     function getVal(v, index = 0) {
       if (Array.isArray(v)) return Number(v[index]) || 0;
