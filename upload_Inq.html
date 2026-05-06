@@ -732,7 +732,7 @@
       showLoading();
 
       try {
-        const res = await fetch("http://localhost:3000/analyze", { method: "POST", body: formData });
+        const res = await fetch("https://trustedai-hm49jq9v.b4a.run/analyze", { method: "POST", body: formData });
         const data = await res.json();
         currentData = data;
 
