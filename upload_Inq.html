@@ -47,6 +47,7 @@
       direction: rtl;
       overflow-x: hidden;
       background: var(--color-background-primary);
+      opacity: 0;
       transition: opacity 0.4s ease;
     }
     body.ready { opacity: 1; }
@@ -89,7 +90,6 @@
       transform: translateY(0) scale(1);
     }
 
-    /* Spinner */
     .pdf-spinner {
       width: 52px;
       height: 52px;
@@ -102,14 +102,12 @@
       position: absolute;
       border-radius: 50%;
     }
-    /* outer ring */
     .pdf-spinner::before {
       inset: 0;
       border: 3px solid var(--accent-light);
       border-top-color: var(--accent);
       animation: spin 0.85s linear infinite;
     }
-    /* inner dot */
     .pdf-spinner::after {
       inset: 12px;
       background: var(--accent-light);
@@ -132,7 +130,6 @@
       transition: opacity 0.3s;
     }
 
-    /* subtle progress bar under modal */
     .pdf-progress {
       margin-top: 1.4rem;
       height: 3px;
@@ -362,9 +359,7 @@
 </head>
 <body>
 
-  <!-- ══════════════════════════════════════
-       LOADING OVERLAY
-  ══════════════════════════════════════ -->
+  <!-- LOADING OVERLAY -->
   <div class="pdf-overlay" id="pdfOverlay">
     <div class="pdf-modal">
       <div class="pdf-spinner"></div>
@@ -446,52 +441,50 @@
   <div class="sidebar-overlay" onclick="closeSidebar()"></div>
 
   <!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="s-nav">
-    <div class="s-section">الرئيسية</div>
-    <button class="s-item " onclick="navTo(this)">
-      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
-      لوحة الضمان
-    </button>
-    <a href="cgc-queries.html" style="text-decoration: none;">
-    <button class="s-item" onclick="navTo(this)">
-      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-      طلبات الضمان
-      <span class="s-badge a">7</span>
-    </button>
-    </a>
-    <div class="s-section">الملفات الائتمانية</div>
-    <a href="upload_Inq.html" style="text-decoration: none;">
-      <button class="s-item active" onclick="" >
-      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-      رفع ملف ائتماني
-    </button>
-    </a>
-    <a href="ocr_page.html" style="text-decoration: none;">
-    <button class="s-item" onclick="navTo(this)">
-      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-     البحث في مستند
-    </button>
-    </a>
-    
-    
-    <a href="inquiry_extraction.html" style="text-decoration: none;">
-    <button class="s-item" onclick="navTo(this)">
-      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
-      استخراج بيانات الاستعلام
-    </button>
-    </a>
-  </div>
-  <div class="s-footer">
-    <div class="s-user">
-      <div class="avatar" style="width:32px;height:32px;font-size:10.5px;">AD</div>
-      <div class="s-user-info">
-        <div class="s-user-name">Admin</div>
-        <div class="s-user-email">admin@trusted-it.ai</div>
+  <aside class="sidebar">
+    <div class="s-nav">
+      <div class="s-section">الرئيسية</div>
+      <button class="s-item" onclick="navTo(this)">
+        <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
+        لوحة الضمان
+      </button>
+      <a href="cgc-queries.html" style="text-decoration: none;">
+        <button class="s-item" onclick="navTo(this)">
+          <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+          طلبات الضمان
+          <span class="s-badge a">7</span>
+        </button>
+      </a>
+      <div class="s-section">الملفات الائتمانية</div>
+      <a href="upload_Inq.html" style="text-decoration: none;">
+        <button class="s-item active">
+          <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+          رفع ملف ائتماني
+        </button>
+      </a>
+      <a href="ocr_page.html" style="text-decoration: none;">
+        <button class="s-item" onclick="navTo(this)">
+          <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          البحث في مستند
+        </button>
+      </a>
+      <a href="inquiry_extraction.html" style="text-decoration: none;">
+        <button class="s-item" onclick="navTo(this)">
+          <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+          استخراج بيانات الاستعلام
+        </button>
+      </a>
+    </div>
+    <div class="s-footer">
+      <div class="s-user">
+        <div class="avatar" style="width:32px;height:32px;font-size:10.5px;">AD</div>
+        <div class="s-user-info">
+          <div class="s-user-name">Admin</div>
+          <div class="s-user-email">admin@trusted-it.ai</div>
+        </div>
       </div>
     </div>
-  </div>
-</aside>
+  </aside>
 
   <!-- MAIN CONTENT -->
   <div class="main-wrapper">
@@ -508,7 +501,7 @@
         <input type="file" id="fileInput" multiple accept=".json,.pdf,.xlsx,.csv" style="display:none" onchange="handleFiles(this.files)" />
         <div class="upload-icon">📂</div>
         <div class="upload-label">اسحب ملفاتك هنا أو <strong>اضغط للاختيار</strong></div>
-        <div class="upload-hint">يدعم JSON – أو استخدم بيانات شركة الجزيرة التجريبية مباشرة</div>
+        <div class="upload-hint">يدعم PDF, Excel, JSON</div>
       </div>
 
       <div class="file-tag hidden" id="fileTag">
@@ -559,13 +552,20 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
   <script>
-    /* ── AUTH GUARD ── */
 
+    // ✅ إصلاح الصفحة البيضاء — أظهر الـ body بعد التحميل
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.classList.add('ready');
+    });
+
+    // ✅ API URL — غيّره لو احتجت ترجع للـ localhost
+   const API_URL = "https://trustedai-hm49jq9v.b4a.run";
+    //const API_URL = "http://localhost:3000";
 
     /* ── SIDEBAR / NOTIF ── */
     function toggleSidebar() { document.body.classList.toggle('sidebar-open'); }
     function closeSidebar()  { document.body.classList.remove('sidebar-open'); }
-    function navigate(el) {
+    function navTo(el) {
       document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
       el.classList.add('active');
       closeSidebar();
@@ -579,6 +579,9 @@
       const badge = document.querySelector('.badge-count');
       if (badge) badge.remove();
     }
+    function handleLogout() {
+      window.location.href = 'index.html';
+    }
     document.addEventListener('click', () => document.getElementById('notifPanel').classList.remove('open'));
     document.getElementById('notifPanel').addEventListener('click', e => e.stopPropagation());
     document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -589,7 +592,7 @@
     });
 
     /* ══════════════════════════════════════
-       LOADING OVERLAY LOGIC
+       LOADING OVERLAY
     ══════════════════════════════════════ */
     const loadingSteps = [
       'يتم تجميع بيانات الملف الائتماني...',
@@ -597,24 +600,21 @@
       'حساب النسب والمؤشرات...',
       'إعداد تقرير القرار النهائي...',
     ];
-
     let loadingInterval = null;
     let progressInterval = null;
 
     function showLoading() {
-      const overlay   = document.getElementById('pdfOverlay');
-      const subText   = document.getElementById('pdfModalSub');
-      const progBar   = document.getElementById('pdfProgressBar');
+      const overlay = document.getElementById('pdfOverlay');
+      const subText = document.getElementById('pdfModalSub');
+      const progBar = document.getElementById('pdfProgressBar');
 
-      // Reset
-      subText.textContent  = loadingSteps[0];
-      progBar.style.width  = '0%';
+      subText.textContent = loadingSteps[0];
+      progBar.style.width = '0%';
       overlay.classList.add('visible');
 
       let step = 0;
       let progress = 0;
 
-      // Rotate messages every 1.8s
       loadingInterval = setInterval(() => {
         step = (step + 1) % loadingSteps.length;
         subText.style.opacity = '0';
@@ -624,13 +624,12 @@
         }, 200);
       }, 1800);
 
-      // Animate progress bar up to ~85% (the last 15% fills on success)
       progressInterval = setInterval(() => {
         if (progress < 85) {
-          progress += Math.random() * 4;
+          progress += Math.random() * 3;
           progBar.style.width = Math.min(progress, 85) + '%';
         }
-      }, 300);
+      }, 400);
     }
 
     function hideLoading(success = true) {
@@ -642,7 +641,6 @@
       clearInterval(progressInterval);
 
       if (success) {
-        // Fill bar to 100% then fade out
         progBar.style.width = '100%';
         subText.style.opacity = '0';
         setTimeout(() => {
@@ -651,26 +649,13 @@
         }, 200);
         setTimeout(() => {
           overlay.classList.remove('visible');
-        }, 700);
+        }, 900);
       } else {
         overlay.classList.remove('visible');
       }
     }
 
-    /* ── DASHBOARD ── */
-    const defaultData = {
-      company_name: "شركة الجزيرة للاستيراد والتصدير",
-      financial_year: "2022-12-31",
-      commercial_register: "24040",
-      sales: 192079384, gross_profit: 43467565, net_profit: 30831689,
-      total_assets: 218777149, total_liabilities: 82010333, total_equity: 136766816,
-      current_assets: 212816553, current_liabilities: 82010333,
-      cash_flow_from_operations: 605000,
-      roe: "85.4%", roa: "66.3%", Leverage: "17.9%"
-    };
-    let currentData = { ...defaultData };
-    let balanceChartInst = null, barChartInst = null;
-
+    /* ── FILE HANDLING ── */
     const zone = document.getElementById('uploadZone');
     zone.addEventListener('click', () => document.getElementById('fileInput').click());
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
@@ -678,17 +663,18 @@
     zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
 
     let selectedFiles = null;
+    let currentData = {};
+    let balanceChartInst = null, barChartInst = null;
 
     function handleFiles(files) {
       if (!files.length) return;
       selectedFiles = files;
-
-      for (let index = 0; index < files.length; index++) {
-      
-        document.getElementById('fileTagName').textContent += " --- " + files[index].name;
+      document.getElementById('fileTagName').textContent = '';
+      for (let i = 0; i < files.length; i++) {
+        document.getElementById('fileTagName').textContent += (i > 0 ? ' — ' : '') + files[i].name;
       }
       document.getElementById('fileTag').classList.remove('hidden');
-      document.getElementById('analyzeBtn').textContent = "تحليل ←";
+      document.getElementById('analyzeBtn').textContent = 'تحليل ←';
     }
 
     function fmt(n) {
@@ -698,47 +684,87 @@
       return Math.round(n).toLocaleString();
     }
 
+    /* ══════════════════════════════════════
+       ANALYZE — Job Queue Pattern
+    ══════════════════════════════════════ */
     async function analyze() {
       if (!selectedFiles) {
-        alert("❗ اختار ملف الأول");
+        alert('❗ اختار ملف الأول');
         return;
       }
 
       const formData = new FormData();
       for (let i = 0; i < selectedFiles.length; i++) {
-        formData.append("files", selectedFiles[i]);
+        formData.append('files', selectedFiles[i]);
       }
 
       const btn = document.getElementById('analyzeBtn');
       btn.disabled = true;
-
-      // ── Show loading overlay ──
       showLoading();
 
       try {
-        const res = await fetch("https://trustedai-hm49jq9v.b4a.run/analyze", { method: "POST", body: formData });
-        const data = await res.json();
-        currentData = data;
+        // ── الخطوة 1: ابعت الملفات وخد الـ jobId فوراً ──
+        const initRes = await fetch(`${API_URL}/analyze`, {
+          method: 'POST',
+          body: formData
+        });
 
-        // ── Hide overlay (success) then render ──
-        hideLoading(true);
+        if (!initRes.ok) throw new Error('فشل الاتصال بالسيرفر');
+        const { jobId } = await initRes.json();
 
-        setTimeout(() => {
-          document.getElementById('dashboard').classList.remove('hidden');
-          renderWaterfall(data);
-          renderBalance(data);
-          renderBar(data);
-          renderRatios(data);
-        }, 800); // small delay so "تم التحليل بنجاح" is readable
+        if (!jobId) throw new Error('لم يُرسل jobId من السيرفر');
+
+        // ── الخطوة 2: Polling كل 4 ثواني لحد ما الجوب يخلص ──
+        const poll = setInterval(async () => {
+          try {
+            const jobRes = await fetch(`${API_URL}/job/${jobId}`);
+            const job = await jobRes.json();
+
+            if (job.status === 'done') {
+              clearInterval(poll);
+              currentData = job.result;
+              hideLoading(true);
+
+              setTimeout(() => {
+                renderDashboard(job.result);
+              }, 950);
+
+              btn.disabled = false;
+              btn.textContent = 'إعادة التحليل ←';
+
+            } else if (job.status === 'error') {
+              clearInterval(poll);
+              hideLoading(false);
+              alert('❌ خطأ في التحليل: ' + job.error);
+              btn.disabled = false;
+              btn.textContent = 'إعادة التحليل ←';
+            }
+            // لو status === 'processing' نكمل الـ polling
+          } catch (pollErr) {
+            clearInterval(poll);
+            hideLoading(false);
+            alert('❌ انقطع الاتصال أثناء المتابعة');
+            btn.disabled = false;
+            btn.textContent = 'إعادة التحليل ←';
+          }
+        }, 4000);
 
       } catch (err) {
         console.error(err);
         hideLoading(false);
-        alert("❌ حصل خطأ في الاتصال بالـ API");
+        alert('❌ حصل خطأ في الاتصال بالـ API: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'إعادة التحليل ←';
       }
+    }
 
-      btn.disabled = false;
-      btn.textContent = "إعادة التحليل ←";
+    /* ── RENDER ── */
+    function renderDashboard(data) {
+      document.getElementById('dashboard').classList.remove('hidden');
+      renderWaterfall(data);
+      renderBalance(data);
+      renderBar(data);
+      renderRatios(data);
     }
 
     function getVal(v, index = 0) {
@@ -747,30 +773,30 @@
     }
 
     function getTextVal(v, index = 0) {
-      if (Array.isArray(v)) return v[index] ?? "";
-      return v ?? "";
+      if (Array.isArray(v)) return v[index] ?? '';
+      return v ?? '';
     }
 
     function getYears(d) {
       if (Array.isArray(d.years) && d.years.length) return d.years;
       if (Array.isArray(d.income_statement?.year) && d.income_statement.year.length) return d.income_statement.year;
-      return ["2023", "2022", "2021"];
+      return ['2023', '2022', '2021'];
     }
 
     function renderWaterfall(d) {
       const years = getYears(d);
-      const sales      = getVal(d.income_statement?.total_sales_revenues ?? d.sales, 0);
-      const grossProfit= getVal(d.income_statement?.gross_profit_is ?? d.gross_profit, 0);
-      const netProfit  = getVal(d.income_statement?.net_profit_loss_is ?? d.net_profit, 0);
+      const sales       = getVal(d.income_statement?.total_sales_revenues ?? d.sales, 0);
+      const grossProfit = getVal(d.income_statement?.gross_profit_is ?? d.gross_profit, 0);
+      const netProfit   = getVal(d.income_statement?.net_profit_loss_is ?? d.net_profit, 0);
       const cogs = getVal(d.income_statement?.cogs, 0) || (sales - grossProfit);
       const opex = getVal(d.income_statement?.total_expenses, 0) || (grossProfit - netProfit);
       const maxV = sales || 1;
       const items = [
-        { label: `المبيعات ${years[0]}`, v: sales,      color: '#378ADD' },
-        { label: 'تكلفة البضاعة',        v: cogs,       color: '#E24B4A' },
-        { label: 'مجمل الربح',           v: grossProfit,color: '#1D9E75' },
-        { label: 'مصاريف تشغيل',         v: opex,       color: '#EF9F27' },
-        { label: 'صافي الربح',           v: netProfit,  color: '#3C3489' },
+        { label: `المبيعات ${years[0]}`, v: sales,       color: '#378ADD' },
+        { label: 'تكلفة البضاعة',        v: cogs,        color: '#E24B4A' },
+        { label: 'مجمل الربح',           v: grossProfit, color: '#1D9E75' },
+        { label: 'مصاريف تشغيل',         v: opex,        color: '#EF9F27' },
+        { label: 'صافي الربح',           v: netProfit,   color: '#3C3489' },
       ];
       document.getElementById('waterfallChart').innerHTML = items.map(item => {
         const pct = Math.max((item.v / maxV) * 100, 10).toFixed(1);
@@ -802,7 +828,7 @@
 
     function renderBar(d) {
       if (barChartInst) barChartInst.destroy();
-      const years = getYears(d);
+      const years            = getYears(d);
       const sales            = d.income_statement?.total_sales_revenues ?? d.sales;
       const grossProfit      = d.income_statement?.gross_profit_is ?? d.gross_profit;
       const netProfit        = d.income_statement?.net_profit_loss_is ?? d.net_profit;
@@ -838,8 +864,8 @@
     function renderRatios(d) {
       const years = getYears(d);
       const ratios = [
-        { name: `العائد على الملكية ${years[0]}`, short: 'ROE', value: getTextVal(d.roe, 0),               circleBg: '#E1F5EE', circleColor: '#0f6e56', border: '#1D9E75' },
-        { name: `العائد على الأصول ${years[0]}`,  short: 'ROA', value: getTextVal(d.roa, 0),               circleBg: '#E6F1FB', circleColor: '#185fa5', border: '#378ADD' },
+        { name: `العائد على الملكية ${years[0]}`, short: 'ROE', value: getTextVal(d.roe, 0),                    circleBg: '#E1F5EE', circleColor: '#0f6e56', border: '#1D9E75' },
+        { name: `العائد على الأصول ${years[0]}`,  short: 'ROA', value: getTextVal(d.roa, 0),                    circleBg: '#E6F1FB', circleColor: '#185fa5', border: '#378ADD' },
         { name: `الرافعة المالية ${years[0]}`,    short: 'LEV', value: getTextVal(d.leverage ?? d.Leverage, 0), circleBg: '#FAEEDA', circleColor: '#854f0b', border: '#EF9F27' },
       ];
       document.getElementById('ratiosGrid').innerHTML = ratios.map(r => `
@@ -849,6 +875,7 @@
           <div style="font-size:10px;color:var(--color-text-tertiary);margin-top:3px;">${r.short}</div>
         </div>`).join('');
     }
+
   </script>
   <script src="style_excel.js"></script>
 </body>
