@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -448,49 +448,47 @@
 
   <!-- SIDEBAR -->
 <aside class="sidebar">
-  <div class="sidebar-section-label">القائمة الرئيسية</div>
-  <nav class="sidebar-nav">
-    <a href="cgc-dashboard.html" style="text-decoration: none;">
-      <button class="sidebar-item" onclick="navigate(this)">
-        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-        لوحة الضمان
-      </button>
-    </a>
+  <div class="s-nav">
+    <div class="s-section">الرئيسية</div>
+    <button class="s-item " onclick="navTo(this)">
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span>
+      لوحة الضمان
+    </button>
     <a href="cgc-queries.html" style="text-decoration: none;">
-      <button class="sidebar-item" onclick="navigate(this)">
-        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-        طلبات الضمان
-      </button>
+    <button class="s-item" onclick="navTo(this)">
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+      طلبات الضمان
+      <span class="s-badge a">7</span>
+    </button>
     </a>
-        <a href="upload_Inq.html" style="text-decoration: none;">
-      <button class="sidebar-item" onclick="navigate(this)">
-        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-        رفع ملف ائتماني
-      </button>
+    <div class="s-section">الملفات الائتمانية</div>
+    <a href="upload_Inq.html" style="text-decoration: none;">
+      <button class="s-item active" onclick="" >
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+      رفع ملف ائتماني
+    </button>
     </a>
-    <div class="sidebar-divider"></div>
-
     <a href="ocr_page.html" style="text-decoration: none;">
-      <button class="sidebar-item" onclick="navigate(this)">
-        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-        البحث في مستند
-      </button>
+    <button class="s-item" onclick="navTo(this)">
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+     البحث في مستند
+    </button>
     </a>
+    
+    
     <a href="inquiry_extraction.html" style="text-decoration: none;">
-
-      <button class="sidebar-item active" onclick="navigate(this)">
-        <span class="si-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
-        استخراج بيانات الاستعلام
-      </button>
+    <button class="s-item" onclick="navTo(this)">
+      <span class="s-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+      استخراج بيانات الاستعلام
+    </button>
     </a>
-
-  </nav>
-  <div class="sidebar-footer">
-    <div class="sidebar-user">
-      <div class="avatar" id="sidebarAvatar">م أ</div>
-      <div class="sidebar-user-info">
-        <div class="sidebar-user-name" id="sidebarUserName">محمد أحمد</div>
-        <div class="sidebar-user-email" id="sidebarUserEmail">m.ahmed@company.com</div>
+  </div>
+  <div class="s-footer">
+    <div class="s-user">
+      <div class="avatar" style="width:32px;height:32px;font-size:10.5px;">AD</div>
+      <div class="s-user-info">
+        <div class="s-user-name">Admin</div>
+        <div class="s-user-email">admin@trusted-it.ai</div>
       </div>
     </div>
   </div>
@@ -563,22 +561,7 @@
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
   <script>
     /* ── AUTH GUARD ── */
-    const userData = sessionStorage.getItem('currentUser');
-    if (!userData) {
-      window.location.href = 'login.html';
-    } else {
-      const user = JSON.parse(userData);
-      document.getElementById('navAvatar').textContent       = user.initials;
-      document.getElementById('navUserName').textContent     = user.name;
-      requestAnimationFrame(() => document.body.classList.add('ready'));
-    }
 
-    function handleLogout() {
-      sessionStorage.removeItem('currentUser');
-      document.body.style.opacity = '0';
-      document.body.style.transition = 'opacity 0.3s ease';
-      setTimeout(() => { window.location.href = 'login.html'; }, 300);
-    }
 
     /* ── SIDEBAR / NOTIF ── */
     function toggleSidebar() { document.body.classList.toggle('sidebar-open'); }
@@ -716,127 +699,48 @@
       return Math.round(n).toLocaleString();
     }
 
- async function analyze() {
-  if (!selectedFiles) {
-    alert("❗ اختار ملف الأول");
-    return;
-  }
-
-  const btn = document.getElementById("analyzeBtn");
-  btn.disabled = true;
-
-  showLoading();
-
-  try {
-    // Simulate API delay - 7 seconds
-    await new Promise(resolve => setTimeout(resolve, 7000));
-
-    const data = {
-      "company_name": "شركة الجزيرة للاستيراد والتصدير",
-      "financial_year": "2023",
-      "commercial_register": "24040",
-      "years": ["2023", "2022", "2021"],
-      "sales": [4920000, 3520000, 2510000],
-      "gross_profit": [1230000, 880000, 630000],
-      "net_profit": [1075000, 770000, 530000],
-      "total_assets": [1710000, 1190000, 1135000],
-      "total_liabilities": [250000, 220000, 200000],
-      "total_equity": [1400000, 920000, 885000],
-      "current_assets": [1560000, 1010000, 925000],
-      "current_liabilities": [250000, 220000, 200000],
-      "cash_flow_from_operations": [605000, 740000, -40000],
-      "roe": ["92.8%", "85.4%", "85.4%"],
-      "roa": ["74.3%", "66.3%", "66.3%"],
-      "leverage": ["17.9%", "23.9%", "22.6%"],
-      "balance_sheet": {
-        "cash": [150000, 130000, 125000],
-        "inventories": [1050000, 540000, 470000],
-        "accounts_receivable_debtors": [360000, 340000, 330000],
-        "cash_collateral": [null, null, null],
-        "prepaid_expenses": [null, null, null],
-        "others_current_assets": [null, null, null],
-        "total_current_assets": [1560000, 1010000, 925000],
-        "buildings": [300000, 300000, 300000],
-        "intangible_assets": [null, null, null],
-        "accumulated_depreciation": [150000, 120000, 90000],
-        "lands": [null, null, null],
-        "machinery_equipment": [null, null, null],
-        "vehicles": [null, null, null],
-        "office_furniture": [null, null, null],
-        "properties_under_development": [null, null, null],
-        "others_fixed_assets": [null, null, null],
-        "total_fixed_assets": [150000, 180000, 210000],
-        "total_assets_bs": [1710000, 1190000, 1135000],
-        "liabilities": [250000, 220000, 200000],
-        "bank_overdraft": [null, null, null],
-        "accounts_payable": [250000, 220000, 200000],
-        "current_portion_term_loan": [null, null, null],
-        "accrued_expenses": [null, null, null],
-        "advance_payments": [null, null, null],
-        "others_current_liabilities": [null, null, null],
-        "total_current_liabilities": [250000, 220000, 200000],
-        "non_current_portion_term_loan": [null, null, null],
-        "notes_payables": [null, null, null],
-        "partners_loans": [null, null, null],
-        "others_long_term": [null, null, null],
-        "total_long_term_liabilities": [null, null, null],
-        "owners_equity": [1400000, 920000, 885000],
-        "shareholders_current_account": [274000, 99000, 304000],
-        "current_year_net_profit_loss": [1075000, 770000, 530000],
-        "retained_earnings": [null, null, null],
-        "reserves": [null, null, null],
-        "legal_reserve": [null, null, null],
-        "other_equity": [null, null, null],
-        "paid_up_capital": [51000, 51000, 51000],
-        "total_equity_bs": [1400000, 920000, 885000],
-        "total_liabilities_equity": [1710000, 1190000, 1135000],
-        "difference": [0, 0, 0]
-      },
-      "income_statement": {
-        "period": ["12 months", "12 months", "12 months"],
-        "year": ["2023", "2022", "2021"],
-        "total_sales_revenues": [4920000, 3520000, 2510000],
-        "cogs": [3690000, 2640000, 1880000],
-        "gross_profit_is": [1230000, 880000, 630000],
-        "sga_expenses": [123000, 79000, 70000],
-        "depreciation_industrial": [null, null, null],
-        "depreciation_administration": [30000, 30000, 30000],
-        "interest_revenue": [null, null, null],
-        "interest_expenses": [null, null, null],
-        "other_expenses": [null, null, null],
-        "taxes": [2000, 1000, null],
-        "other_revenues": [null, null, null],
-        "provisions": [null, null, null],
-        "total_expenses": [155000, 110000, 100000],
-        "net_profit_loss_is": [1075000, 770000, 530000]
+    async function analyze() {
+      if (!selectedFiles) {
+        alert("❗ اختار ملف الأول");
+        return;
       }
-    };
 
-    console.log("Mock Analyze Response:", data);
+      const formData = new FormData();
+      for (let i = 0; i < selectedFiles.length; i++) {
+        formData.append("files", selectedFiles[i]);
+      }
 
-    currentData = data;
+      const btn = document.getElementById('analyzeBtn');
+      btn.disabled = true;
 
-    hideLoading(true);
+      // ── Show loading overlay ──
+      showLoading();
 
-    setTimeout(() => {
-      document.getElementById("dashboard").classList.remove("hidden");
+      try {
+        const res = await fetch("https://trustedai-hm49jq9v.b4a.run/analyze", { method: "POST", body: formData });
+        const data = await res.json();
+        currentData = data;
 
-      renderWaterfall(data);
-      renderBalance(data);
-      renderBar(data);
-      renderRatios(data);
-    }, 800);
+        // ── Hide overlay (success) then render ──
+        hideLoading(true);
 
-  } catch (err) {
-    console.error("Analyze Mock Error:", err);
-    hideLoading(false);
-    alert("❌ حصل خطأ أثناء التحليل التجريبي:\n" + err.message);
+        setTimeout(() => {
+          document.getElementById('dashboard').classList.remove('hidden');
+          renderWaterfall(data);
+          renderBalance(data);
+          renderBar(data);
+          renderRatios(data);
+        }, 800); // small delay so "تم التحليل بنجاح" is readable
 
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "إعادة التحليل ←";
-  }
-}
+      } catch (err) {
+        console.error(err);
+        hideLoading(false);
+        alert("❌ حصل خطأ في الاتصال بالـ API");
+      }
+
+      btn.disabled = false;
+      btn.textContent = "إعادة التحليل ←";
+    }
 
     function getVal(v, index = 0) {
       if (Array.isArray(v)) return Number(v[index]) || 0;
